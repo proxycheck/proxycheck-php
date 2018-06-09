@@ -1,0 +1,28 @@
+{
+    "name": "proxycheck/proxycheck",
+    "description": "proxycheck.io PHP Library",
+    "keywords": [
+      "proxycheck",
+      "proxy checking",
+      "api"
+    ],
+    "homepage": "https://proxycheck.io/",
+    "license": "MIT",
+    "authors": [
+      {
+        "name": "proxycheck and contributors",
+        "homepage": "https://github.com/proxycheck/proxycheck-php/contributors"
+      }
+    ],
+    "type": "project",
+    "require": {
+      "php": ">=5.4.0",
+      "ext-curl": "*",
+      "ext-json": "*"
+    },
+	"autoload": {
+        "psr-4": {
+            "proxycheck\\proxycheck\\": "src/"
+        }
+    }
+}
