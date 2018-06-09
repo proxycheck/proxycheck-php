@@ -14,14 +14,22 @@ To use the library, use Composer's [autoload](https://getcomposer.org/doc/01-bas
 require_once('vendor/autoload.php');
 ```
 
-## Dependencies
+## Dependencies ##
 
 The library requires the following extensions in order to work properly:
 
 - [`curl`](https://secure.php.net/manual/en/book.curl.php) (Please make sure your cacert.pem is up to date if you intend to use TLS querying)
 - [`json`](https://secure.php.net/manual/en/book.json.php)
 
-## Getting Started
+## Service Limits ##
+
+* Free users without an API Key = 100 Daily Queries
+* Free users with an API Key = 1,000 Daily Queries
+* Paid users with an API Key = 10,000 to 10.24 Million+ Daily Queries
+
+Get your API Key at [proxycheck.io](http://proxycheck.io/) it's free.
+
+## Getting Started ##
 
 Performing a check on an IP Address (IPv4 and IPv6 supported).
 
@@ -46,7 +54,7 @@ Performing a check on an IP Address (IPv4 and IPv6 supported).
   $result_array = \proxycheck\proxycheck::check($ip, $proxycheck_options);
 ```
 
-## Viewing the query result
+## Viewing the query result ##
 
 When performing a query you will receive back an array which contains various information. Below is an example of parsing that array to determine if this user should be blocked or not.
 
@@ -65,7 +73,7 @@ When performing a query you will receive back an array which contains various in
   }
 ```
 
-## Extra information included in the query result
+## Extra information included in the query result ##
 
 When performing a query you will receive not just ```block: yes/no``` and ```block_reason: [reason]``` but also the entirety of the API response from proxycheck.io, we do this so you can either make an easy block system or utilise the data presented by the API as you see fit. A full result example is shown below.
 
