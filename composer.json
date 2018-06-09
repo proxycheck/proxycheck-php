@@ -1,5 +1,5 @@
 {
-    "name": "proxycheck/proxycheck",
+    "name": "proxycheck/proxycheck-php",
     "description": "proxycheck.io PHP Library",
     "keywords": [
       "proxycheck",
@@ -22,7 +22,7 @@
     },
 	"autoload": {
         "psr-4": {
-            "proxycheck\\": "src/"
+            "proxycheck\\": "src"
         }
     }
 }
