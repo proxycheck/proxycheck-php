@@ -1,5 +1,5 @@
 {
-    "name": "proxycheck/proxycheck-php",
+    "name": "proxycheck/proxycheck",
     "description": "proxycheck.io PHP Library",
     "keywords": [
       "proxycheck",
@@ -16,13 +16,13 @@
     ],
     "type": "project",
     "require": {
-      "php": ">=5.4.0",
+      "php": ">=5.4",
       "ext-curl": "*",
       "ext-json": "*"
     },
 	"autoload": {
         "psr-4": {
-            "proxycheck\\proxycheck\\": "src/"
+            "proxycheck\\": "src/"
         }
     }
 }
