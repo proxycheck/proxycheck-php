@@ -1,5 +1,5 @@
 # proxycheck-php
-php library for calling the [https://proxycheck.io/](proxycheck.io) v2 API which allows you to check if an IP Address is a Proxy or VPN and get the Country, ASN and Provider for the IP Address being checked.
+php library for calling the [proxycheck.io](https://proxycheck.io/) v2 API which allows you to check if an IP Address is a Proxy or VPN and get the Country, ASN and Provider for the IP Address being checked.
 
 ## Install via Composer ##
 
