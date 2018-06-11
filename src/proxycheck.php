@@ -24,6 +24,9 @@
       $URL .= "&vpn=" . $Options['VPN_DETECTION'];
       $URL .= "&inf=" . $Options['INF_ENGINE'];
       $URL .= "&asn=" . $Options['ASN_DATA'];
+      $URL .= "&node=1";
+      $URL .= "&port=1";
+      $URL .= "&seen=1";
       
       // By default the tag used is your querying domain and the webpage being accessed
       // However you can supply your own descriptive tag or disable tagging altogether.
