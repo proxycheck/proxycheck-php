@@ -14,7 +14,7 @@
         "homepage": "https://github.com/proxycheck/proxycheck-php/contributors"
       }
     ],
-    "type": "project",
+    "type": "library",
     "require": {
       "php": ">=5.4",
       "ext-curl": "*",
