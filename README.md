@@ -87,6 +87,7 @@ Array
             [asn] => AS#####
             [provider] => Acme Incorperated
             [country] => Wakanda
+            [isocode] => WA
             [proxy] => yes/no
             [type] => VPN/SOCKS5/SOCKS4/SOCKS/HTTP/HTTPS/Inference Engine/Compromised Server
             [port] => #####
