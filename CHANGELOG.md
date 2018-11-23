@@ -5,7 +5,7 @@ CHANGELOG
 ------------------
 
 * Added a new function called listing which allows you to view and modify
-  your whitelist and blacklists using our official dashboard API.
+  your whitelist and blacklist using our official dashboard API.
 
 
 0.1.1 (June 11th 2018)
