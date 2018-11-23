@@ -81,5 +81,45 @@
       return $Decoded_JSON;
       
     }
+
+    public static function listing($Options) {
+
+      // Setup the correct querying string for the transport security selected.
+      if ( $Options['TLS_SECURITY'] == TRUE ) { $URL = "https://"; } else { $URL = "http://"; }
+      
+      // Build up the URL string with the selected flags.
+      $URL .= "proxycheck.io/dashboard/" . $Options['LIST_SELECTION'] . "/" . $Options['LIST_ACTION'] . "/";
+      $URL .= "?key=" . $Options['API_KEY'];
+      
+      if ( $Options['LIST_ACTION'] == "add" OR $Options['LIST_ACTION'] == "remove" OR $Options['LIST_ACTION'] == "set") {
+        if ( !empty($Options['LIST_ENTRIES']) ) {
+          $Post_Field = "data=" . implode("\r\n", $Options['LIST_ENTRIES']);
+        } else {
+          $Post_Field = "";
+        }
+      } else {
+        $Post_Field = "";
+      }
+      
+      // Performing the API query to proxycheck.io/dashboard/ using cURL
+      $ch = curl_init($URL);
+      
+      $curl_options = array(
+        CURLOPT_CONNECTTIMEOUT => 30,
+        CURLOPT_POST => 1,
+        CURLOPT_POSTFIELDS => $Post_Field,
+        CURLOPT_RETURNTRANSFER => true
+      );
+      
+      curl_setopt_array($ch, $curl_options);
+      $API_JSON_Result = curl_exec($ch);
+      curl_close($ch);
+      
+      // Decode the JSON from our API
+      $Decoded_JSON = json_decode($API_JSON_Result, true);
+      
+      return $Decoded_JSON;
+      
+    }
   
   }
