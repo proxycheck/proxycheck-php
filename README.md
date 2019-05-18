@@ -18,7 +18,7 @@ require_once('vendor/autoload.php');
 
 The library requires the following extensions in order to work properly:
 
-- [`curl`](https://secure.php.net/manual/en/book.curl.php) (Please make sure your cacert.pem is up to date if you intend to use TLS querying)
+- [`curl`](https://secure.php.net/manual/en/book.curl.php) (Please make sure your [cacert.pem](https://curl.haxx.se/docs/caextract.html) is up to date if you intend to use TLS querying)
 - [`json`](https://secure.php.net/manual/en/book.json.php)
 
 ## Service Limits ##
@@ -48,11 +48,13 @@ $proxycheck_options = array(
   'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
   'QUERY_TAGGING' => 1, // Enable or disable query tagging.
   'CUSTOM_TAG' => '', // Specify a custom query tag instead of the default (Domain+Page).
-  'BLOCKED_COUNTRIES' => array('Wakanda', 'Mordor') // Specify an array of countries to be blocked.
+  'BLOCKED_COUNTRIES' => array('Wakanda', 'CN'), // Specify an array of countries or isocodes to be blocked.
+  'ALLOWED_COUNTRIES' => array('Azeroth', 'US') // Specify an array of countries or isocodes to be allowed.
 );
   
 $result_array = \proxycheck\proxycheck::check($ip, $proxycheck_options);
 ```
+In the above example we have included both countries and isocodes in both the ```BLOCKED_COUNTRIES``` and ```ALLOWED_COUNTRIES``` field. That is because as of 0.1.3 (May 2019) this library now supports both for use in these arrays. You can think of these two fields like a local whitelist/blacklist feature but only for countries.
 
 ## Viewing the query result ##
 
@@ -100,6 +102,41 @@ Array
 ```
 
 In the above example the ```status``` field lets you know the status of this query. You can view all our API responses [here](https://proxycheck.io/api/) within our API documentation page. Also where in our example we show ```###.###.###.###``` you will receive the actual IP Address you sent to the API for checking.
+
+## Viewing Statistics from your Dashboard ##
+
+In version 0.1.3 (May 2019) we added the ability to view statistics from your account dashboard through this library. Below is an example of how to do that.
+
+```php
+$proxycheck_options = array(
+  'API_KEY' => '', // Your API Key.
+  'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
+  'STAT_SELECTION' => 'usage', // Stats to view: detections, usage or queries
+  'LIMIT' => '10', // Specify how many entries to view (applies to detection stats only)
+  'OFFSET' => '0' // Specify an offset in the entries to view (applies to detection stats only)
+);
+    
+$result_array = \proxycheck\proxycheck::stats($proxycheck_options);
+```
+When accessing dashboard API's an API Key is always required as the dashboard is only for registered users (both free and paid have full dashboard access). You will also need to make sure you have Dashboard API access enabled [within your dashboard](https://proxycheck.io/dashboard/) on our website.
+
+You can see that in the ```STAT_SELECTION``` field we are providing the name of the stat we would like to view. In this example we have selected ```usage``` but you can also check detections or queries. This library will also support future stat types automatically.
+
+Below is an example of how this result would look.
+
+```php
+Array
+(
+    [Queries Today] => 234
+    [Daily Limit] => 1000
+    [Queries Total] => 840931
+    [Plan Tier] => Free
+)
+```
+
+When viewing the ```detections``` stat you can also provide a limit (which is how many entries to show you) and offset (which is how many entries to skip over before starting to show you any results).
+
+So for example if you had 100 entries and you only wanted to view entries 31 to 40 you would supply 10 as a limit and 30 as an offset.
 
 ## Manipulating your Whitelist/Blacklist ##
 
