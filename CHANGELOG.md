@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+0.1.3 (May 18th 2019)
+------------------
+
+* Added a new function called stats which allows you to view the stats
+  from your dashboard using our official dashboard API's
+* Updated the check function to support a new option array called
+  ALLOWED_COUNTRIES so you can do local country based whitelisting.
+* Updated the COUNTRIES feature to allow isocodes to be used in addition
+  to country names.
+* Improved the classes handling of errors when options were not supplied
+  in the options array.
+
+
 0.1.2 (November 23rd 2018)
 ------------------
 
