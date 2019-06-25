@@ -93,6 +93,7 @@ Array
             [isocode] => WA
             [proxy] => yes/no
             [type] => VPN/SOCKS5/SOCKS4/SOCKS/HTTP/HTTPS/Inference Engine/Compromised Server
+            [risk] => 0 to 100
             [port] => #####
             [last seen human] => 6 hours, 18 minutes, 49 seconds ago
             [last seen unix] => 1528687645
