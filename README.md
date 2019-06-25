@@ -44,6 +44,7 @@ $proxycheck_options = array(
   'ASN_DATA' => 1, // Enable ASN data response.
   'DAY_RESTRICTOR' => 7, // Restrict checking to proxies seen in the past # of days.
   'VPN_DETECTION' => 1, // Check for both VPN's and Proxies instead of just Proxies.
+  'RISK_DATA' => 1, // 0 = Off, 1 = Risk Score (0-100), 2 = Risk Score & Attack History.
   'INF_ENGINE' => 1, // Enable or disable the real-time inference engine.
   'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
   'QUERY_TAGGING' => 1, // Enable or disable query tagging.
