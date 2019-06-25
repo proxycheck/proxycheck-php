@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+0.1.4 (June 25th 2019)
+------------------
+
+* Added a new query flag: risk which lets you view both risk scores
+  and attack history for IP Addresses.
+
+
 0.1.3 (May 18th 2019)
 ------------------
 
