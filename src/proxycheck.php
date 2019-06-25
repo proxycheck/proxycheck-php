@@ -24,6 +24,7 @@
       $URL .= "&vpn=" . $Options['VPN_DETECTION'];
       $URL .= "&inf=" . $Options['INF_ENGINE'];
       $URL .= "&asn=" . $Options['ASN_DATA'];
+      $URL .= "&risk=" . $Options['RISK_DATA'];
       $URL .= "&node=1";
       $URL .= "&port=1";
       $URL .= "&seen=1";
