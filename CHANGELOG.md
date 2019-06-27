@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.1.5 (June 27th 2019)
+------------------
+
+* Added better protection against absent parameters in array options.
+  
+
 0.1.4 (June 25th 2019)
 ------------------
 
