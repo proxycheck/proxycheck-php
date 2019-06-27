@@ -10,30 +10,32 @@
 
 
       // Setup the correct querying string for the transport security selected.
-      if ( $Options['TLS_SECURITY'] == TRUE ) { $URL = "https://"; } else { $URL = "http://"; }
+      if ( isset($Options['TLS_SECURITY']) && $Options['TLS_SECURITY'] == TRUE ) { $URL = "https://"; } else { $URL = "http://"; }
       
       // Check if they have enabled blocking or allowing countries and if so, enable ASN checking.
-      if ( !empty($Options['BLOCKED_COUNTRIES']) OR !empty($Options['ALLOWED_COUNTRIES'])) {
+      if ( isset($Options['BLOCKED_COUNTRIES']) && !empty($Options['BLOCKED_COUNTRIES'][0]) ) {
+        $Options['ASN_DATA'] = 1;
+      } else if ( isset($Options['ALLOWED_COUNTRIES']) && !empty($Options['ALLOWED_COUNTRIES'][0])) {
         $Options['ASN_DATA'] = 1;
       }
       
       // Build up the URL string with the selected flags.
       $URL .= "proxycheck.io/v2/" . $Visitor_IP;
-      $URL .= "?key=" . $Options['API_KEY'];
-      $URL .= "&days=" . $Options['DAY_RESTRICTOR'];
-      $URL .= "&vpn=" . $Options['VPN_DETECTION'];
-      $URL .= "&inf=" . $Options['INF_ENGINE'];
-      $URL .= "&asn=" . $Options['ASN_DATA'];
-      $URL .= "&risk=" . $Options['RISK_DATA'];
+      if ( isset($Options['DAY_RESTRICTOR']) ) { $URL .= "?key=" . $Options['API_KEY']; } else { $URL .= "?key="; }
+      if ( isset($Options['DAY_RESTRICTOR']) ) { $URL .= "&days=" . $Options['DAY_RESTRICTOR']; }
+      if ( isset($Options['VPN_DETECTION']) ) { $URL .= "&vpn=" . $Options['VPN_DETECTION']; }
+      if ( isset($Options['INF_ENGINE']) ) { $URL .= "&inf=" . $Options['INF_ENGINE']; }
+      if ( isset($Options['ASN_DATA']) ) { $URL .= "&asn=" . $Options['ASN_DATA']; }
+      if ( isset($Options['RISK_DATA']) ) { $URL .= "&risk=" . $Options['RISK_DATA']; }
       $URL .= "&node=1";
       $URL .= "&port=1";
       $URL .= "&seen=1";
       
       // By default the tag used is your querying domain and the webpage being accessed
       // However you can supply your own descriptive tag or disable tagging altogether.
-      if ( $Options['QUERY_TAGGING'] == TRUE && empty($Options['CUSTOM_TAG']) ) {
+      if ( isset($Options['QUERY_TAGGING']) && $Options['QUERY_TAGGING'] == TRUE && empty($Options['CUSTOM_TAG']) ) {
         $Post_Field = "tag=" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
-      } else if ( $Options['QUERY_TAGGING'] == TRUE && !empty($Options['CUSTOM_TAG']) ) {
+      } else if ( isset($Options['QUERY_TAGGING']) && $Options['QUERY_TAGGING'] == TRUE && !empty($Options['CUSTOM_TAG']) ) {
         $Post_Field = "tag=" . $Options['CUSTOM_TAG'];
       } else {
         $Post_Field = "";
@@ -75,12 +77,12 @@
       }
       
       // Country checking for blocking and allowing specific countries by name or isocode.
-      if ( $Decoded_JSON["block"] == "no" && !empty($Options['BLOCKED_COUNTRIES']) ) {
+      if ( $Decoded_JSON["block"] == "no" && isset($Options['BLOCKED_COUNTRIES']) && !empty($Options['BLOCKED_COUNTRIES'][0]) ) {
           if ( in_array($Decoded_JSON[$Visitor_IP]["country"],$Options['BLOCKED_COUNTRIES']) OR in_array($Decoded_JSON[$Visitor_IP]["isocode"],$Options['BLOCKED_COUNTRIES'])  ) {
             $Decoded_JSON["block"] = "yes";
             $Decoded_JSON["block_reason"] = "country";
           }
-      } else if ( $Decoded_JSON["block"] == "yes" && !empty($Options['ALLOWED_COUNTRIES'])) {
+      } else if ( $Decoded_JSON["block"] == "yes" && isset($Options['ALLOWED_COUNTRIES']) && !empty($Options['ALLOWED_COUNTRIES'][0])) {
           if ( in_array($Decoded_JSON[$Visitor_IP]["country"],$Options['ALLOWED_COUNTRIES']) OR in_array($Decoded_JSON[$Visitor_IP]["isocode"],$Options['ALLOWED_COUNTRIES'])  ) {
             $Decoded_JSON["block"] = "no";
             $Decoded_JSON["block_reason"] = "na";
@@ -94,7 +96,7 @@
     public static function listing($Options) {
 
       // Setup the correct querying string for the transport security selected.
-      if ( $Options['TLS_SECURITY'] == TRUE ) { $URL = "https://"; } else { $URL = "http://"; }
+      if ( isset($Options['TLS_SECURITY']) && $Options['TLS_SECURITY'] == TRUE ) { $URL = "https://"; } else { $URL = "http://"; }
       
       // Build up the URL string for the selected list and action.
       $URL .= "proxycheck.io/dashboard/" . $Options['LIST_SELECTION'] . "/" . $Options['LIST_ACTION'] . "/";
@@ -134,7 +136,7 @@
     public static function stats($Options) {
 
       // Setup the correct querying string for the transport security selected.
-      if ( $Options['TLS_SECURITY'] == TRUE ) { $URL = "https://"; } else { $URL = "http://"; }
+      if ( isset($Options['TLS_SECURITY']) && $Options['TLS_SECURITY'] == TRUE ) { $URL = "https://"; } else { $URL = "http://"; }
       
       // Build up the URL string for the selected export stat.
       $URL .= "proxycheck.io/dashboard/export/" . $Options['STAT_SELECTION'] . "/";
