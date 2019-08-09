@@ -49,8 +49,8 @@ $proxycheck_options = array(
   'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
   'QUERY_TAGGING' => 1, // Enable or disable query tagging.
   'CUSTOM_TAG' => '', // Specify a custom query tag instead of the default (Domain+Page).
-  'BLOCKED_COUNTRIES' => array('Wakanda', 'CN'), // Specify an array of countries or isocodes to be blocked.
-  'ALLOWED_COUNTRIES' => array('Azeroth', 'US') // Specify an array of countries or isocodes to be allowed.
+  'BLOCKED_COUNTRIES' => array('Wakanda', 'WA'), // Specify an array of countries or isocodes to be blocked.
+  'ALLOWED_COUNTRIES' => array('Azeroth', 'AJ') // Specify an array of countries or isocodes to be allowed.
 );
   
 $result_array = \proxycheck\proxycheck::check($ip, $proxycheck_options);
