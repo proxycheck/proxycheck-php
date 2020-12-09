@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+0.1.6 (December 9th 2020)
+------------------
+
+* Updated code formatting to meet PSR-12 specifications.
+* Improved the cURL implementation with GET/POST method arguments.
+* Corrected an issue where omitting the DAY_RESTRICTOR within your options
+  array would cause your API Key to not be sent with your requests.
+  
+
 0.1.5 (June 27th 2019)
 ------------------
 
