@@ -140,17 +140,17 @@ When viewing the ```detections``` stat you can also provide a limit (which is ho
 
 So for example if you had 100 entries and you only wanted to view entries 31 to 40 you would supply 10 as a limit and 30 as an offset.
 
-## Manipulating your Whitelist/Blacklist ##
+## Manipulating your CORS Origins, Whitelist or Blacklist ##
 
-In version 0.1.2 (Nov 2018) we added the ability to view, add, remove, set and clear your whitelist and blacklist through this library. Below is an example of adding three entries to your whitelist in a single query.
+In version 0.1.2 (Nov 2018) we added the ability to view, add, remove, set and clear your whitelist and blacklist through this library, in December 2020 a CORS API was added to proxycheck.io and the below code also works for that. Below is an example of adding three entries to your whitelist in a single query.
 
 ```php
 $proxycheck_options = array(
   'API_KEY' => '', // Your API Key.
   'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
-  'LIST_SELECTION' => 'whitelist', // Specify the list you're accessing: whitelist or blacklist
+  'LIST_SELECTION' => 'whitelist', // Specify the list you're accessing: CORS, whitelist or blacklist
   'LIST_ACTION' => 'add', // Specify an action: list, add, remove, set or clear.
-  'LIST_ENTRIES' => array('8.8.8.8', '1.1.1.1/24', 'AS888') // Addresses, Ranges or ASN's to be added, removed or set
+  'LIST_ENTRIES' => array('8.8.8.8', '1.1.1.1/24', 'AS888') // Origins, IPs, Ranges or ASN's to be added, removed or set
 );
     
 $result_array = \proxycheck\proxycheck::listing($proxycheck_options);
@@ -160,4 +160,6 @@ When accessing dashboard API's an API Key is always required as the dashboard is
 
 You can see that in the LIST_ENTRIES field we are providing an array of three seperate entries, this field is only used if you're performing an add, remove or set action. When providing entries in the LIST_ENTRIES field you can include comments, for example ```'LIST_ENTRIES' => array('8.8.8.8 #this is google')``` would create a new entry with the comment intact.
 
-If an entry you're removing has a comment next to it you will need to include that comment in the removal request aswell, like in the example above where we included a comment next to the IP Address we were adding you would do the same when removing it.
+This LIST_ENTRIES field can also be used when adding, setting or removing origins for use with the CORS feature. In this situation comments are not supported, only domains (including wildcard domains such as \*.example.com). All LIST_ACTION types are supported with CORS in the same way they are with Whitelist/Blacklist manipulation.
+
+If a white or blacklist entry you're removing has a comment next to it you will need to include that comment in the removal request aswell, like in the example above where we included a comment next to the IP Address we were adding you would do the same when removing it.
