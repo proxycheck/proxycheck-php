@@ -79,7 +79,11 @@ class proxycheck
         }
 
         // Performing the API query to proxycheck.io/v2/ using cURL
-        $decoded_json = self::makeRequest('GET', $url, $post_fields);
+        if ( isset($post_fields) && !empty($post_fields) ) {
+            $decoded_json = self::makeRequest('POST', $url, $post_fields);
+        } else {
+            $decoded_json = self::makeRequest('GET', $url, $post_fields);
+        }
 
         // Output the clear block and block reasons for the IP we're checking.
         if (isset($decoded_json[$visitor_ip]["proxy"]) && $decoded_json[$visitor_ip]["proxy"] == "yes" && $decoded_json[$visitor_ip]["type"] == "VPN") {
