@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+0.1.7 (December 29th 2020)
+------------------
+
+* Corrected an issue where custom tags wouldn't be sent with requests.
+  This bug was introduced by the 0.1.6 release.
+  
+
 0.1.6 (December 9th 2020)
 ------------------
 
