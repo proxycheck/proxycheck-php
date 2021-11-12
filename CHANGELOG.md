@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+0.1.8 (November 12th 2021)
+------------------
+
+* Moves around the required and optional parameters for our makeRequest() function
+  to support PHP8+ which has deprecated our previous implementation.
+  
+
 0.1.7 (December 29th 2020)
 ------------------
 
