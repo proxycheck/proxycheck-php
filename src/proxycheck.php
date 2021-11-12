@@ -80,9 +80,9 @@ class proxycheck
 
         // Performing the API query to proxycheck.io/v2/ using cURL
         if ( isset($post_fields) && !empty($post_fields) ) {
-            $decoded_json = self::makeRequest('POST', $url, $post_fields);
+            $decoded_json = self::makeRequest($url, $post_fields, 'POST');
         } else {
-            $decoded_json = self::makeRequest('GET', $url, $post_fields);
+            $decoded_json = self::makeRequest($url, $post_fields);
         }
 
         // Output the clear block and block reasons for the IP we're checking.
@@ -147,7 +147,7 @@ class proxycheck
         }
 
         // Performing the API query to proxycheck.io/dashboard/ using cURL
-        $decoded_json = self::makeRequest('POST', $url, $post_fields);
+        $decoded_json = self::makeRequest($url, $post_fields, 'POST');
 
         return $decoded_json;
     }
@@ -184,12 +184,12 @@ class proxycheck
         }
 
         // Performing the API query to proxycheck.io/dashboard/ using cURL
-        $decoded_json = self::makeRequest('GET', $url);
+        $decoded_json = self::makeRequest($url);
 
         return $decoded_json;
     }
 
-    public static function makeRequest($method = 'GET', $url, $params = [])
+    public static function makeRequest($url, $params = [], $method = 'GET')
     {
         $ch = curl_init($url);
 
