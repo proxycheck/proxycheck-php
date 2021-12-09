@@ -36,6 +36,7 @@ Performing a check on an IP Address (IPv4 and IPv6 supported).
 ```php
 // Get your visitors IP Address
 // If you're using CloudFlare change $_SERVER["REMOTE_ADDR"] to $_SERVER["HTTP_CF_CONNECTING_IP"]
+// You may also supply an array of addresses in $ip to check multiple addresses at once.
 $ip = $_SERVER["REMOTE_ADDR"];
 
 // Input your options for this query including your optional API Key and query flags.
@@ -59,7 +60,7 @@ In the above example we have included both countries and isocodes in both the ``
 
 ## Viewing the query result ##
 
-When performing a query you will receive back an array which contains various information. Below is an example of parsing that array to determine if this user should be blocked or not.
+When performing a query you will receive back an array which contains various information. Below is an example of parsing that array to determine if this user should be blocked or not. Please note the block and block_reason results are only populated when checking a single address, when passing an array of addresses to perform a multi-check these variables will both contain ```na```.
 
 ```php
 if ( $result_array['block'] == "yes" ) {
