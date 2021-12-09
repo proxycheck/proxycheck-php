@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+0.1.9 (December 9th 2021)
+------------------
+
+* Added support for checking multiple addresses in a single request by passsing an
+  array as the $ip variable instead of a string.
+  
+
 0.1.8 (November 12th 2021)
 ------------------
 
