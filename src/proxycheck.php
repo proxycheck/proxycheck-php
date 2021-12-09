@@ -39,9 +39,17 @@ class proxycheck
                 $options['ASN_DATA'] = 1;
             }
         }
+        
+        $url .= "proxycheck.io/v2/";
+
+        // Check if the visitor_ip is an array of addresses to be checked.
+        if (is_array($visitor_ip)) {
+            $post_fields[] = "ips=" . implode(",", $visitor_ip);
+        } else {
+            $url .= $visitor_ip;
+        }
 
         // Build up the URL string with the selected flags.
-        $url .= "proxycheck.io/v2/" . $visitor_ip;
         if (isset($options['API_KEY'])) {
             $url .= "?key=" . $options['API_KEY'];
         } else {
@@ -69,20 +77,26 @@ class proxycheck
         // By default the tag used is your querying domain and the webpage being accessed
         // However you can supply your own descriptive tag or disable tagging altogether.
         if (isset($options['QUERY_TAGGING']) && $options['QUERY_TAGGING'] == true && empty($options['CUSTOM_TAG'])) {
-            $post_fields = "tag=" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+            $post_fields[] = "tag=" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
         } else {
             if (isset($options['QUERY_TAGGING']) && $options['QUERY_TAGGING'] == true && !empty($options['CUSTOM_TAG'])) {
-                $post_fields = "tag=" . $options['CUSTOM_TAG'];
-            } else {
-                $post_fields = "";
+                $post_fields[] = "tag=" . $options['CUSTOM_TAG'];
             }
         }
 
         // Performing the API query to proxycheck.io/v2/ using cURL
         if ( isset($post_fields) && !empty($post_fields) ) {
-            $decoded_json = self::makeRequest($url, $post_fields, 'POST');
+            $decoded_json = self::makeRequest($url, implode("&", $post_fields), 'POST');
         } else {
-            $decoded_json = self::makeRequest($url, $post_fields);
+            $decoded_json = self::makeRequest($url);
+        }
+        
+        // If we're checking multiple addresses the block, block_reason and local country blocking doesn't apply.
+        // Thus we'll return early before that code is run.
+        if (is_array($visitor_ip)) {
+            $decoded_json["block"] = "na";
+            $decoded_json["block_reason"] = "na";
+            return $decoded_json;
         }
 
         // Output the clear block and block reasons for the IP we're checking.
