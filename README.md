@@ -1,5 +1,5 @@
 # proxycheck-php
-php library for calling the [proxycheck.io](https://proxycheck.io/) v2 API which allows you to check if an IP Address is a Proxy or VPN and get the Country, ASN and Provider for the IP Address being checked.
+php library for calling the [proxycheck.io](https://proxycheck.io/) v2 API which allows you to check if an IP address is a Proxy or VPN and get the Country, ASN and Provider for the IP address being checked. This library also supports checking email addresses to determine if they belong to a disposable email service or not.
 
 ## Install via Composer ##
 
@@ -31,13 +31,13 @@ Get your API Key at [proxycheck.io](http://proxycheck.io/) it's free.
 
 ## Getting Started ##
 
-Performing a check on an IP Address (IPv4 and IPv6 supported).
+Performing a check on an address (IPv4 and IPv6 IP addresses are supported along with email addresses for disposable mailbox checking.).
 
 ```php
-// Get your visitors IP Address
+// Get your visitors IP address or email address
 // If you're using CloudFlare change $_SERVER["REMOTE_ADDR"] to $_SERVER["HTTP_CF_CONNECTING_IP"]
-// You may also supply an array of addresses in $ip to check multiple addresses at once.
-$ip = $_SERVER["REMOTE_ADDR"];
+// You may also supply an array of addresses in $address to check multiple addresses at once.
+$address = $_SERVER["REMOTE_ADDR"];
 
 // Input your options for this query including your optional API Key and query flags.
 $proxycheck_options = array(
@@ -49,12 +49,13 @@ $proxycheck_options = array(
   'INF_ENGINE' => 1, // Enable or disable the real-time inference engine.
   'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
   'QUERY_TAGGING' => 1, // Enable or disable query tagging.
+  'MASK_ADDRESS' => 1, // Anonymises the local-part of an email address (e.g. anonymous@domain.tld)
   'CUSTOM_TAG' => '', // Specify a custom query tag instead of the default (Domain+Page).
   'BLOCKED_COUNTRIES' => array('Wakanda', 'WA'), // Specify an array of countries or isocodes to be blocked.
   'ALLOWED_COUNTRIES' => array('Azeroth', 'AJ') // Specify an array of countries or isocodes to be allowed.
 );
   
-$result_array = \proxycheck\proxycheck::check($ip, $proxycheck_options);
+$result_array = \proxycheck\proxycheck::check($address, $proxycheck_options);
 ```
 In the above example we have included both countries and isocodes in both the ```BLOCKED_COUNTRIES``` and ```ALLOWED_COUNTRIES``` field. That is because as of 0.1.3 (May 2019) this library now supports both for use in these arrays. You can think of these two fields like a local whitelist/blacklist feature but only for countries.
 
@@ -104,7 +105,7 @@ Array
 )
 ```
 
-In the above example the ```status``` field lets you know the status of this query. You can view all our API responses [here](https://proxycheck.io/api/) within our API documentation page. Also where in our example we show ```###.###.###.###``` you will receive the actual IP Address you sent to the API for checking.
+In the above example the ```status``` field lets you know the status of this query. You can view all our API responses [here](https://proxycheck.io/api/) within our API documentation page. Also where in our example we show ```###.###.###.###``` you will receive the actual address you sent to the API for checking.
 
 ## Viewing Statistics from your Dashboard ##
 
@@ -151,7 +152,7 @@ $proxycheck_options = array(
   'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
   'LIST_SELECTION' => 'whitelist', // Specify the list you're accessing: CORS, whitelist or blacklist
   'LIST_ACTION' => 'add', // Specify an action: list, add, remove, set or clear.
-  'LIST_ENTRIES' => array('8.8.8.8', '1.1.1.1/24', 'AS888') // Origins, IPs, Ranges or ASN's to be added, removed or set
+  'LIST_ENTRIES' => array('8.8.8.8', '1.1.1.1/24', 'AS888') // Origins, IPs, Ranges, ASN's or Emails to be added, removed or set
 );
     
 $result_array = \proxycheck\proxycheck::listing($proxycheck_options);
@@ -163,4 +164,4 @@ You can see that in the LIST_ENTRIES field we are providing an array of three se
 
 This LIST_ENTRIES field can also be used when adding, setting or removing origins for use with the CORS feature. In this situation comments are not supported, only domains (including wildcard domains such as \*.example.com). All LIST_ACTION types are supported with CORS in the same way they are with Whitelist/Blacklist manipulation.
 
-If a white or blacklist entry you're removing has a comment next to it you will need to include that comment in the removal request aswell, like in the example above where we included a comment next to the IP Address we were adding you would do the same when removing it.
+If a white or blacklist entry you're removing has a comment next to it you will need to include that comment in the removal request aswell, like in the example above where we included a comment next to the IP address we were adding you would do the same when removing it.
