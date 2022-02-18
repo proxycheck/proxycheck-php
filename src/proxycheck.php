@@ -15,6 +15,7 @@ class proxycheck
     const OPTION_DAY_RESTRICTOR = 'DAY_RESTRICTOR';
     const OPTION_QUERY_TAGGING = 'QUERY_TAGGING';
     const OPTION_CUSTOM_TAG = 'CUSTOM_TAG';
+    const OPTION_MASK_ADDRESS = 'MASK_ADDRESS';
     const OPTION_LIST_SELECTION = 'LIST_SELECTION';
     const OPTION_LIST_ACTION = 'LIST_ACTION';
     const OPTION_LIMIT = 'LIMIT';
@@ -22,7 +23,7 @@ class proxycheck
     const OPTION_STAT_SELECTION = 'STAT_SELECTION';
 
 
-    public static function check($visitor_ip, $options)
+    public static function check($address, $options)
     {
         // Setup the correct querying string for the transport security selected.
         if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] == true) {
@@ -41,12 +42,31 @@ class proxycheck
         }
         
         $url .= "proxycheck.io/v2/";
+        
+        // Check if email masking has been enabled and perform that masking if we're checking an email address.
+        if ( isset($options['MASK_ADDRESS']) && $options['MASK_ADDRESS'] == 1 ) {
+            if (is_array($address)) {
+                $Anonymised_Addresses = array();
+                foreach ( $address as $single_address ) {
+                    if ( strpos($single_address, "@") !== false ) {
+                        $Anonymised_Addresses[] = "anonymous@" . explode("@", $single_address)[1];
+                    } else {
+                        $Anonymised_Addresses[] = $single_address;
+                    }
+                }
+                $address = $Anonymised_Addresses;
+            } else {
+                if ( strpos($address, "@") !== false ) {
+                    $address = "anonymous@" . explode("@", $address)[1];
+                }
+            }
+        }
 
-        // Check if the visitor_ip is an array of addresses to be checked.
-        if (is_array($visitor_ip)) {
-            $post_fields[] = "ips=" . implode(",", $visitor_ip);
+        // Check if the address is an array of addresses to be checked.
+        if (is_array($address)) {
+            $post_fields[] = "ips=" . implode(",", $address);
         } else {
-            $url .= $visitor_ip;
+            $url .= $address;
         }
 
         // Build up the URL string with the selected flags.
@@ -93,18 +113,31 @@ class proxycheck
         
         // If we're checking multiple addresses the block, block_reason and local country blocking doesn't apply.
         // Thus we'll return early before that code is run.
-        if (is_array($visitor_ip)) {
+        if (is_array($address)) {
             $decoded_json["block"] = "na";
             $decoded_json["block_reason"] = "na";
             return $decoded_json;
         }
+        
+        // Check if we're looking up an email address to see if it's disposable or not.
+        // We return straight after as country and other checks are not applicable.
+        if ( strpos($address, "@") !== false && isset($decoded_json[$address]["disposable"]) ) {
+          if ( $decoded_json[$address]["disposable"] == "yes" ) {
+            $decoded_json["block"] = "yes";
+            $decoded_json["block_reason"] = "disposable";
+          } else {
+            $decoded_json["block"] = "no";
+            $decoded_json["block_reason"] = "na";
+          }
+          return $decoded_json;
+        }
 
         // Output the clear block and block reasons for the IP we're checking.
-        if (isset($decoded_json[$visitor_ip]["proxy"]) && $decoded_json[$visitor_ip]["proxy"] == "yes" && $decoded_json[$visitor_ip]["type"] == "VPN") {
+        if (isset($decoded_json[$address]["proxy"]) && $decoded_json[$address]["proxy"] == "yes" && $decoded_json[$address]["type"] == "VPN") {
             $decoded_json["block"] = "yes";
             $decoded_json["block_reason"] = "vpn";
         } else {
-            if (isset($decoded_json[$visitor_ip]["proxy"]) && $decoded_json[$visitor_ip]["proxy"] == "yes") {
+            if (isset($decoded_json[$address]["proxy"]) && $decoded_json[$address]["proxy"] == "yes") {
                 $decoded_json["block"] = "yes";
                 $decoded_json["block_reason"] = "proxy";
             } else {
@@ -115,8 +148,8 @@ class proxycheck
 
         // Country checking for blocking and allowing specific countries by name or isocode.
         if ($decoded_json["block"] == "no" && isset($options['BLOCKED_COUNTRIES']) && !empty($options['BLOCKED_COUNTRIES'][0])) {
-            if (in_array($decoded_json[$visitor_ip]["country"], $options['BLOCKED_COUNTRIES']) or in_array(
-                    $decoded_json[$visitor_ip]["isocode"],
+            if (in_array($decoded_json[$address]["country"], $options['BLOCKED_COUNTRIES']) or in_array(
+                    $decoded_json[$address]["isocode"],
                     $options['BLOCKED_COUNTRIES']
                 )) {
                 $decoded_json["block"] = "yes";
@@ -124,8 +157,8 @@ class proxycheck
             }
         } else {
             if ($decoded_json["block"] == "yes" && isset($options['ALLOWED_COUNTRIES']) && !empty($options['ALLOWED_COUNTRIES'][0])) {
-                if (in_array($decoded_json[$visitor_ip]["country"], $options['ALLOWED_COUNTRIES']) or in_array(
-                        $decoded_json[$visitor_ip]["isocode"],
+                if (in_array($decoded_json[$address]["country"], $options['ALLOWED_COUNTRIES']) or in_array(
+                        $decoded_json[$address]["isocode"],
                         $options['ALLOWED_COUNTRIES']
                     )) {
                     $decoded_json["block"] = "no";
