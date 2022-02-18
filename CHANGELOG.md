@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.2.0 (February 18th 2022)
+------------------
+
+* Added full support for checking email addresses in addition to ip addresses.
+  
+
 0.1.9 (December 9th 2021)
 ------------------
 
