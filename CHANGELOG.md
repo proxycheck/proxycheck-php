@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.2.1 (October 28th 2022)
+------------------
+
+* Corrected an exception when checking an IP which doesn't have Country data available.
+  
+
 0.2.0 (February 18th 2022)
 ------------------
 
