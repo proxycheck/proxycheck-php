@@ -118,7 +118,7 @@ class proxycheck
             $decoded_json["block_reason"] = "na";
             return $decoded_json;
         }
-        
+            
         // Check if we're looking up an email address to see if it's disposable or not.
         // We return straight after as country and other checks are not applicable.
         if ( strpos($address, "@") !== false && isset($decoded_json[$address]["disposable"]) ) {
@@ -146,6 +146,13 @@ class proxycheck
             }
         }
 
+        // This information isn't aways available
+        if (!isset($decoded_json[$address]["country"])) {
+            $decoded_json["block"] = "na";
+            $decoded_json["block_reason"] = "na";
+            return $decoded_json;
+        }
+        
         // Country checking for blocking and allowing specific countries by name or isocode.
         if ($decoded_json["block"] == "no" && isset($options['BLOCKED_COUNTRIES']) && !empty($options['BLOCKED_COUNTRIES'][0])) {
             if (in_array($decoded_json[$address]["country"], $options['BLOCKED_COUNTRIES']) or in_array(
