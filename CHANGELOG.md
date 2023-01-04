@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+0.2.2 (January 4th 2023)
+------------------
+
+* Improved the reliability of sending addresses to the API by always using the POST method
+  This now applies to sending a singular address in addition to multiple addresses.
+  
+
 0.2.1 (October 28th 2022)
 ------------------
 
