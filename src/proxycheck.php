@@ -66,7 +66,7 @@ class proxycheck
         if (is_array($address)) {
             $post_fields[] = "ips=" . implode(",", $address);
         } else {
-            $url .= $address;
+            $post_fields[] = "ips=" . $address;
         }
 
         // Build up the URL string with the selected flags.
