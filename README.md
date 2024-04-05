@@ -90,11 +90,26 @@ Array
     [###.###.###.###] => Array
         (
             [asn] => AS#####
-            [provider] => Acme Incorperated
+            [range] => ###.###.###.###/24
+            [hostname] => 78-2-adsl.acme.net
+            [provider] => Acme Incorporated
+            [organisation] => Acme Net
             [country] => Wakanda
             [isocode] => WA
+            [region] => Wakanda North
+            [regioncode] => WAN
+            [city] => Birnin Zana
+            [postcode] => BZ967
+            [latitude] => 2.5072
+            [longitude] => -0.1276
+            [currency] => Array
+                (
+                    [code] => VD
+                    [name] => Vibranium Dollar
+                    [symbol] => $
+                )
             [proxy] => yes/no
-            [type] => VPN/SOCKS5/SOCKS4/SOCKS/HTTP/HTTPS/Inference Engine/Compromised Server
+            [type] => VPN/SOCKS5/SOCKS4/SOCKS/HTTP/HTTPS/Compromised Server
             [risk] => 0 to 100
             [port] => #####
             [last seen human] => 6 hours, 18 minutes, 49 seconds ago
