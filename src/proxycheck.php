@@ -228,7 +228,11 @@ class proxycheck
         if (!empty($options['RULE_ENTRIES'])) {
             $post_fields .= "data=" . $options['RULE_ENTRIES'];
         }
-
+        
+        if ( !isset($post_fields) OR empty($post_fields) ) {
+          $post_fields = '';
+        }
+        
         // Performing the API query to proxycheck.io/dashboard/rules/ using cURL
         $decoded_json = self::makeRequest($url, $post_fields, 'POST');
 
