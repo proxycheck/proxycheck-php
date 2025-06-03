@@ -18,6 +18,8 @@ class proxycheck
     const OPTION_MASK_ADDRESS = 'MASK_ADDRESS';
     const OPTION_LIST_SELECTION = 'LIST_SELECTION';
     const OPTION_LIST_ACTION = 'LIST_ACTION';
+    const OPTION_RULE_SELECTION = 'RULE_SELECTION';
+    const OPTION_RULE_ACTION = 'RULE_ACTION';
     const OPTION_LIMIT = 'LIMIT';
     const OPTION_OFFSET = 'OFFSET';
     const OPTION_STAT_SELECTION = 'STAT_SELECTION';
@@ -201,6 +203,33 @@ class proxycheck
         }
 
         // Performing the API query to proxycheck.io/dashboard/ using cURL
+        $decoded_json = self::makeRequest($url, $post_fields, 'POST');
+
+        return $decoded_json;
+    }
+
+    public static function rules($options)
+    {
+        // Setup the correct querying string for the transport security selected.
+        if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] == true) {
+            $url = "https://";
+        } else {
+            $url = "http://";
+        }
+
+        // Build up the URL string for the selected rule and action.
+        $url .= "proxycheck.io/dashboard/rules/" . $options['RULE_ACTION'] . "/";
+        $url .= "?key=" . $options['API_KEY'];
+
+        if (!empty($options['RULE_SELECTION'])) {
+            $post_fields = "name=" . $options['RULE_SELECTION'];
+        }
+        
+        if (!empty($options['RULE_ENTRIES'])) {
+            $post_fields .= "data=" . $options['RULE_ENTRIES'];
+        }
+
+        // Performing the API query to proxycheck.io/dashboard/rules/ using cURL
         $decoded_json = self::makeRequest($url, $post_fields, 'POST');
 
         return $decoded_json;
