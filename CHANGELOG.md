@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+0.2.4 (June 3rd 2025)
+------------------
+
+* Corrected an undefined variable error when supplying a blank RULE_SELECTION
+
 0.2.3 (June 3rd 2025)
 ------------------
 
