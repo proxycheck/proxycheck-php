@@ -180,3 +180,24 @@ You can see that in the LIST_ENTRIES field we are providing an array of three se
 This LIST_ENTRIES field can also be used when adding, setting or removing origins for use with the CORS feature. In this situation comments are not supported, only domains (including wildcard domains such as \*.example.com). All LIST_ACTION types are supported with CORS in the same way they are with Whitelist/Blacklist manipulation.
 
 If a white or blacklist entry you're removing has a comment next to it you will need to include that comment in the removal request aswell, like in the example above where we included a comment next to the IP address we were adding you would do the same when removing it.
+
+## Manipulating your Custom Rules ##
+
+In version 0.2.3 (Jun 2025) we added the ability to view, enable or disable your Custom Rules by name or ID through this library. Below is an example of disabling a custom rule by its name.
+
+```php
+$proxycheck_options = array(
+  'API_KEY' => '', // Your API Key.
+  'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
+  'RULE_SELECTION' => 'Elevate Risk Score Rule', // Specify the rule you're accessing by name or ID (leave blank to print all rule names, ID's and states)
+  'RULE_ACTION' => 'disable', // Specify an action: enable, disable or print.
+);
+    
+$result_array = \proxycheck\proxycheck::rules($proxycheck_options);
+```
+
+When accessing dashboard API's an API Key is always required as the dashboard is only for registered users (both free and paid have full dashboard access). You will also need to make sure you have Dashboard API access enabled [within your dashboard](https://proxycheck.io/dashboard/) on our website.
+
+In the above we've performed a disable action on a rule that exists already in the account. We're using the name the rule was given to target it instead of using its ID however you can use the ID instead that you obtained from the print action. When you want to print a list of all your custom rules you leave the ```RULE_SELECTION``` field blank and supply print in the ```RULE_ACTION``` field. If instead you want all the data from a specific rule you can supply its name or ID with print and you'll receive the same output as if you performed a rule download from within the customer dashboard, this can be saved as a .json file and imported through the dashboard itself.
+
+Other ```RULE_ACTION``` types including deleting, importing, setting etc are supported by this library but are not yet available from the Dashboard API at proxycheck.io and so these will become available at a later date and this documentation will then be updated to reflect that.
