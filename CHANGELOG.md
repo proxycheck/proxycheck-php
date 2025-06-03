@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.2.3 (June 3rd 2025)
+------------------
+
+* Adds support for manipulating Custom Rules via the library.
+  
+
 0.2.2 (January 4th 2023)
 ------------------
 
