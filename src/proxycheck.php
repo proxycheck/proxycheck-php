@@ -83,10 +83,10 @@ class proxycheck
 
         // By default the tag used is your querying domain and the webpage being accessed
         // However you can supply your own descriptive tag or disable tagging altogether.
-        if (isset($options['QUERY_TAGGING']) && $options['QUERY_TAGGING'] == true && empty($options['CUSTOM_TAG'])) {
+        if (isset($options['QUERY_TAGGING']) && $options['QUERY_TAGGING'] === true && empty($options['CUSTOM_TAG'])) {
             $post_fields[] = "tag=" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
         } else {
-            if (isset($options['QUERY_TAGGING']) && $options['QUERY_TAGGING'] == true && !empty($options['CUSTOM_TAG'])) {
+            if (isset($options['QUERY_TAGGING']) && $options['QUERY_TAGGING'] === true && !empty($options['CUSTOM_TAG'])) {
                 $post_fields[] = "tag=" . $options['CUSTOM_TAG'];
             }
         }
@@ -109,11 +109,11 @@ class proxycheck
         // Check if we're looking up an email address to see if it's disposable or not.
         // We return straight after as country and other checks are not applicable.
         if ( strpos($address, "@") !== false && isset($decoded_json[$address]["disposable"]) ) {
-          if ( $decoded_json[$address]["disposable"] == "yes" ) {
-            $decoded_json["block"] = "yes";
+          if ( $decoded_json[$address]["disposable"] === true ) {
+            $decoded_json["block"] = true;
             $decoded_json["block_reason"] = "disposable";
           } else {
-            $decoded_json["block"] = "no";
+            $decoded_json["block"] = false;
             $decoded_json["block_reason"] = "na";
           }
           return $decoded_json;
@@ -125,7 +125,7 @@ class proxycheck
         foreach ( $decoded_json[$address]["detections"] as $detection_key => $detection_value ) {
           
           if ( isset($options[strtoupper($detection_key) . "_DETECTION"]) && $options[strtoupper($detection_key) . "_DETECTION"] === true && $detection_value === true ) {
-              $decoded_json["block"] = "yes";
+              $decoded_json["block"] = true;
               $decoded_json["block_reason"] = $detection_key;
               break;
           }
@@ -133,20 +133,20 @@ class proxycheck
         }
         
         // Country checking for blocking and allowing specific countries by name or isocode.
-        if ($decoded_json["block"] == "no" && isset($options['BLOCKED_COUNTRIES']) && !empty($options['BLOCKED_COUNTRIES'][0])) {
+        if ($decoded_json["block"] === false && isset($options['BLOCKED_COUNTRIES']) && !empty($options['BLOCKED_COUNTRIES'][0])) {
             if (in_array($decoded_json[$address]["location"]["country_name"], $options['BLOCKED_COUNTRIES']) or in_array(
                     $decoded_json[$address]["location"]["country_code"],
                     $options['BLOCKED_COUNTRIES']
                 )) {
-                $decoded_json["block"] = "yes";
+                $decoded_json["block"] = true;
                 $decoded_json["block_reason"] = "country";
             }
-        } else if ($decoded_json["block"] == "yes" && isset($options['ALLOWED_COUNTRIES']) && !empty($options['ALLOWED_COUNTRIES'][0])) {
+        } else if ($decoded_json["block"] === true && isset($options['ALLOWED_COUNTRIES']) && !empty($options['ALLOWED_COUNTRIES'][0])) {
             if (in_array($decoded_json[$address]["location"]["country_name"], $options['ALLOWED_COUNTRIES']) or in_array(
                     $decoded_json[$address]["location"]["country_code"],
                     $options['ALLOWED_COUNTRIES']
                 )) {
-                $decoded_json["block"] = "no";
+                $decoded_json["block"] = false;
                 $decoded_json["block_reason"] = "na";
             }
         }
