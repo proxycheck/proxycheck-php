@@ -108,8 +108,8 @@ class proxycheck
             
         // Check if we're looking up an email address to see if it's disposable or not.
         // We return straight after as country and other checks are not applicable.
-        if ( strpos($address, "@") !== false && isset($decoded_json[$address]["disposable"]) ) {
-          if ( $decoded_json[$address]["disposable"] === true ) {
+        if ( strpos($address, "@") !== false && isset($decoded_json[$address]["detections"]["disposable"]) ) {
+          if ( $decoded_json[$address]["detections"]["disposable"] === true ) {
             $decoded_json["block"] = true;
             $decoded_json["block_reason"] = "disposable";
           } else {
