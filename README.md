@@ -1,5 +1,9 @@
 # proxycheck-php
-php library for calling the [proxycheck.io](https://proxycheck.io/) v2 API which allows you to check if an IP address is a Proxy or VPN and get the Country, ASN and Provider for the IP address being checked. This library also supports checking email addresses to determine if they belong to a disposable email service or not.
+php library for calling the [proxycheck.io](https://proxycheck.io/) v3 API which allows you to check if an IP address is a Proxy or VPN and get the Country, ASN and Provider for the IP address being checked. This library also supports checking email addresses to determine if they belong to a disposable email service or not.
+
+## Upgrading your library from v0.2.x to v1? ##
+
+If you're upgrading from a version < 1.0.0 please check the UPGRADE.md [here](https://github.com/proxycheck/proxycheck-php/blob/master/UPGRADE.md) for specific instructions on what has changed and what you need to update in your implementation.
 
 ## Install via Composer ##
 
@@ -44,12 +48,16 @@ $proxycheck_options = array(
   'API_KEY' => '######-######-######-######', // Your API Key.
   'ASN_DATA' => 1, // Enable ASN data response.
   'DAY_RESTRICTOR' => 7, // Restrict checking to proxies seen in the past # of days.
-  'VPN_DETECTION' => 1, // Check for both VPN's and Proxies instead of just Proxies.
-  'RISK_DATA' => 1, // 0 = Off, 1 = Risk Score (0-100), 2 = Risk Score & Attack History.
-  'INF_ENGINE' => 1, // Enable or disable the real-time inference engine.
-  'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
-  'QUERY_TAGGING' => 1, // Enable or disable query tagging.
-  'MASK_ADDRESS' => 1, // Anonymises the local-part of an email address (e.g. anonymous@domain.tld)
+  'ANONYMOUS_DETECTION' => true, // Set to true to enable Anonymous detections (setting this to true can override other detection types)
+  'PROXY_DETECTION' => false, // Set to true to enable Proxy detections
+  'VPN_DETECTION' => false, // Set to true to enable VPN detections
+  'SCRAPER_DETECTION' => false, // Set to true to enable Scraper detections
+  'TOR_DETECTION' => false, // Set to true to enable TOR detections
+  'COMPROMISED_DETECTION' => false, // Set to true to enable Compromised Address detections
+  'HOST_DETECTION' => false, // Set to true to enable Hosting detections
+  'TLS_SECURITY' => false, // Enable or disable transport security (TLS).
+  'QUERY_TAGGING' => true, // Enable or disable query tagging.
+  'MASK_ADDRESS' => true, // Anonymises the local-part of an email address (e.g. anonymous@domain.tld)
   'CUSTOM_TAG' => '', // Specify a custom query tag instead of the default (Domain+Page).
   'BLOCKED_COUNTRIES' => array('Wakanda', 'WA'), // Specify an array of countries or isocodes to be blocked.
   'ALLOWED_COUNTRIES' => array('Azeroth', 'AJ') // Specify an array of countries or isocodes to be allowed.
@@ -57,14 +65,14 @@ $proxycheck_options = array(
   
 $result_array = \proxycheck\proxycheck::check($address, $proxycheck_options);
 ```
-In the above example we have included both countries and isocodes in both the ```BLOCKED_COUNTRIES``` and ```ALLOWED_COUNTRIES``` field. That is because as of 0.1.3 (May 2019) this library now supports both for use in these arrays. You can think of these two fields like a local whitelist/blacklist feature but only for countries.
+In the above example we have included both countries and country isocodes in both the ```BLOCKED_COUNTRIES``` and ```ALLOWED_COUNTRIES``` field. That is because this library supports a local whitelist/blacklist feature but only for countries.
 
 ## Viewing the query result ##
 
 When performing a query you will receive back an array which contains various information. Below is an example of parsing that array to determine if this user should be blocked or not. Please note the block and block_reason results are only populated when checking a single address, when passing an array of addresses to perform a multi-check these variables will both contain ```na```.
 
 ```php
-if ( $result_array['block'] == "yes" ) {
+if ( $result_array['block'] === true ) {
     
   // Example of a block and the reason why.
   echo "Blocked, reason: " . $result_array['block_reason'];
@@ -80,47 +88,82 @@ if ( $result_array['block'] == "yes" ) {
 
 ## Extra information included in the query result ##
 
-When performing a query you will receive not just ```block: yes/no``` and ```block_reason: [reason]``` but also the entirety of the API response from proxycheck.io, we do this so you can either make an easy block system or utilise the data presented by the API as you see fit. A full result example is shown below.
+When performing a query you will receive not just ```block: true/false``` and ```block_reason: [reason]``` but also the entirety of the API response from proxycheck.io, we do this so you can either make an easy block system or utilise the data presented by the API as you see fit. A full result example is shown below. Check out the test console on our API documentation page (here)[https://proxycheck.io/api/#test_console_v3] for more examples.
 
 ```php
 Array
-(
-    [status] => ok/warning/denied/error
-    [node] => answering_node_name
-    [###.###.###.###] => Array
-        (
-            [asn] => AS#####
-            [range] => ###.###.###.###/24
-            [hostname] => 78-2-adsl.acme.net
-            [provider] => Acme Incorporated
-            [organisation] => Acme Net
-            [country] => Wakanda
-            [isocode] => WA
-            [region] => Wakanda North
-            [regioncode] => WAN
-            [city] => Birnin Zana
-            [postcode] => BZ967
-            [latitude] => 2.5072
-            [longitude] => -0.1276
-            [currency] => Array
-                (
-                    [code] => VD
-                    [name] => Vibranium Dollar
-                    [symbol] => $
-                )
-            [proxy] => yes/no
-            [type] => VPN/SOCKS5/SOCKS4/SOCKS/HTTP/HTTPS/Compromised Server
-            [risk] => 0 to 100
-            [port] => #####
-            [last seen human] => 6 hours, 18 minutes, 49 seconds ago
-            [last seen unix] => 1528687645
-        )
-    [block] => yes/no
-    [block_reason] => proxy/vpn/country
-)
+{
+    "status": "ok",
+    "185.59.221.75": {
+        "network": {
+            "asn": "AS60068",
+            "range": "185.59.221.0/24",
+            "hostname": "185.59.221.75.adsl.inet-telecom.org",
+            "provider": "Datacamp Limited",
+            "organisation": "CDN77 - London POP",
+            "type": "Hosting"
+        },
+        "location": {
+            "continent_name": "Europe",
+            "continent_code": "EU",
+            "country_name": "United Kingdom",
+            "country_code": "GB",
+            "region_name": "England",
+            "region_code": "ENG",
+            "city_name": "London",
+            "postal_code": "W1B",
+            "latitude": 51.5072,
+            "longitude": -0.1276,
+            "timezone": "Europe/Paris",
+            "currency": {
+                "code": "Pound",
+                "name": "GBP",
+                "symbol": "£"
+            }
+        },
+        "device_estimate": {
+            "address": 50,
+            "subnet": 1890
+        },
+        "detections": {
+            "proxy": false,
+            "vpn": true,
+            "compromised": true,
+            "scraper": false,
+            "tor": false,
+            "hosting": true,
+            "anonymous": true,
+            "risk": 100
+        },
+        "operator": {
+            "name": "IVPN",
+            "url": "https://www.ivpn.net/",
+            "anonymity": "high",
+            "popularity": "medium",
+            "protocols": [
+                "WireGuard",
+                "OpenVPN",
+                "IPSec",
+                "IKEv2"
+            ],
+            "policies": {
+                "ad_filtering": true,
+                "free_access": false,
+                "paid_access": true,
+                "port_forwarding": false,
+                "logging": false,
+                "anonymous_payments": true,
+                "crypto_payments": true,
+                "traceable_ownership": true
+            }
+        },
+        "last_updated": 1757593655
+    },
+    "query_time": 5
+}
 ```
 
-In the above example the ```status``` field lets you know the status of this query. You can view all our API responses [here](https://proxycheck.io/api/) within our API documentation page. Also where in our example we show ```###.###.###.###``` you will receive the actual address you sent to the API for checking.
+In the above example the ```status``` field lets you know the status of this query. You can view all our API responses [here](https://proxycheck.io/api/) within our API documentation page. Also in our example we have an operator section because this IP address is being run by a known VPN operator, this operator section will not always be present.
 
 ## Viewing Statistics from your Dashboard ##
 
@@ -129,7 +172,7 @@ In version 0.1.3 (May 2019) we added the ability to view statistics from your ac
 ```php
 $proxycheck_options = array(
   'API_KEY' => '', // Your API Key.
-  'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
+  'TLS_SECURITY' => true, // Enable or disable transport security (TLS).
   'STAT_SELECTION' => 'usage', // Stats to view: detections, usage or queries
   'LIMIT' => '10', // Specify how many entries to view (applies to detection stats only)
   'OFFSET' => '0' // Specify an offset in the entries to view (applies to detection stats only)
@@ -164,7 +207,7 @@ In version 0.1.2 (Nov 2018) we added the ability to view, add, remove, set and c
 ```php
 $proxycheck_options = array(
   'API_KEY' => '', // Your API Key.
-  'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
+  'TLS_SECURITY' => true, // Enable or disable transport security (TLS).
   'LIST_SELECTION' => 'whitelist', // Specify the list you're accessing: CORS, whitelist or blacklist
   'LIST_ACTION' => 'add', // Specify an action: list, add, remove, set or clear.
   'LIST_ENTRIES' => array('8.8.8.8', '1.1.1.1/24', 'AS888') // Origins, IPs, Ranges, ASN's or Emails to be added, removed or set
@@ -188,7 +231,7 @@ In version 0.2.3 (Jun 2025) we added the ability to view, enable or disable your
 ```php
 $proxycheck_options = array(
   'API_KEY' => '', // Your API Key.
-  'TLS_SECURITY' => 0, // Enable or disable transport security (TLS).
+  'TLS_SECURITY' => true, // Enable or disable transport security (TLS).
   'RULE_SELECTION' => 'Elevate Risk Score Rule', // Specify the rule you're accessing by name or ID (leave blank to print all rule names, ID's and states)
   'RULE_ACTION' => 'disable', // Specify an action: enable, disable or print.
 );
