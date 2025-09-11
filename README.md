@@ -88,7 +88,7 @@ if ( $result_array['block'] === true ) {
 
 ## Extra information included in the query result ##
 
-When performing a query you will receive not just ```block: true/false``` and ```block_reason: [reason]``` but also the entirety of the API response from proxycheck.io, we do this so you can either make an easy block system or utilise the data presented by the API as you see fit. A full result example is shown below. Check out the test console on our API documentation page (here)[https://proxycheck.io/api/#test_console_v3] for more examples.
+When performing a query you will receive not just ```block: true/false``` and ```block_reason: [reason]``` but also the entirety of the API response from proxycheck.io, we do this so you can either make an easy block system or utilise the data presented by the API as you see fit. A full result example is shown below. Check out the test console on our API documentation page [here](https://proxycheck.io/api/#test_console_v3) for more examples.
 
 ```php
 Array
