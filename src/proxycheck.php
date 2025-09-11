@@ -11,7 +11,13 @@ class proxycheck
     const OPTION_TLS_SECURITY = 'TLS_SECURITY';
     const OPTION_INF_ENGINE = 'INF_ENGINE';
     const OPTION_RISK_DATA = 'RISK_DATA';
+    const OPTION_ANONYMOUS_DETECTION = 'ANONYMOUS_DETECTION';
+    const OPTION_PROXY_DETECTION = 'PROXY_DETECTION';
     const OPTION_VPN_DETECTION = 'VPN_DETECTION';
+    const OPTION_SCRAPER_DETECTION = 'SCRAPER_DETECTION';
+    const OPTION_TOR_DETECTION = 'TOR_DETECTION';
+    const OPTION_COMPROMISED_DETECTION = 'COMPROMISED_DETECTION';
+    const OPTION_HOST_DETECTION = 'HOST_DETECTION';
     const OPTION_DAY_RESTRICTOR = 'DAY_RESTRICTOR';
     const OPTION_QUERY_TAGGING = 'QUERY_TAGGING';
     const OPTION_CUSTOM_TAG = 'CUSTOM_TAG';
@@ -28,25 +34,16 @@ class proxycheck
     public static function check($address, $options)
     {
         // Setup the correct querying string for the transport security selected.
-        if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] == true) {
+        if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] === true) {
             $url = "https://";
         } else {
             $url = "http://";
         }
-
-        // Check if they have enabled blocking or allowing countries and if so, enable ASN checking.
-        if (isset($options['BLOCKED_COUNTRIES']) && !empty($options['BLOCKED_COUNTRIES'][0])) {
-            $options['ASN_DATA'] = 1;
-        } else {
-            if (isset($options['ALLOWED_COUNTRIES']) && !empty($options['ALLOWED_COUNTRIES'][0])) {
-                $options['ASN_DATA'] = 1;
-            }
-        }
         
-        $url .= "proxycheck.io/v2/";
+        $url .= "proxycheck.io/v3/";
         
         // Check if email masking has been enabled and perform that masking if we're checking an email address.
-        if ( isset($options['MASK_ADDRESS']) && $options['MASK_ADDRESS'] == 1 ) {
+        if ( isset($options['MASK_ADDRESS']) && $options['MASK_ADDRESS'] === true ) {
             if (is_array($address)) {
                 $Anonymised_Addresses = array();
                 foreach ( $address as $single_address ) {
@@ -77,24 +74,12 @@ class proxycheck
         } else {
             $url .= "?key=";
         }
+        
         if (isset($options['DAY_RESTRICTOR'])) {
             $url .= "&days=" . $options['DAY_RESTRICTOR'];
         }
-        if (isset($options['VPN_DETECTION'])) {
-            $url .= "&vpn=" . $options['VPN_DETECTION'];
-        }
-        if (isset($options['INF_ENGINE'])) {
-            $url .= "&inf=" . $options['INF_ENGINE'];
-        }
-        if (isset($options['ASN_DATA'])) {
-            $url .= "&asn=" . $options['ASN_DATA'];
-        }
-        if (isset($options['RISK_DATA'])) {
-            $url .= "&risk=" . $options['RISK_DATA'];
-        }
+        
         $url .= "&node=1";
-        $url .= "&port=1";
-        $url .= "&seen=1";
 
         // By default the tag used is your querying domain and the webpage being accessed
         // However you can supply your own descriptive tag or disable tagging altogether.
@@ -134,45 +119,35 @@ class proxycheck
           return $decoded_json;
         }
 
-        // Output the clear block and block reasons for the IP we're checking.
-        if (isset($decoded_json[$address]["proxy"]) && $decoded_json[$address]["proxy"] == "yes" && $decoded_json[$address]["type"] == "VPN") {
-            $decoded_json["block"] = "yes";
-            $decoded_json["block_reason"] = "vpn";
-        } else {
-            if (isset($decoded_json[$address]["proxy"]) && $decoded_json[$address]["proxy"] == "yes") {
-                $decoded_json["block"] = "yes";
-                $decoded_json["block_reason"] = "proxy";
-            } else {
-                $decoded_json["block"] = "no";
-                $decoded_json["block_reason"] = "na";
-            }
-        }
-
-        // This information isn't aways available
-        if (!isset($decoded_json[$address]["country"])) {
-            $decoded_json["block"] = "na";
-            $decoded_json["block_reason"] = "na";
-            return $decoded_json;
+        // Output the clear block and block reasons for the address we're checking.
+        
+        // Read through the API's detections response and match the entries to the detection types supplied in the options array
+        foreach ( $decoded_json[$address]["detections"] as $detection_key => $detection_value ) {
+          
+          if ( isset($options[strtoupper($detection_key) . "_DETECTION"]) && $options[strtoupper($detection_key) . "_DETECTION"] === true && $detection_value === true ) {
+              $decoded_json["block"] = "yes";
+              $decoded_json["block_reason"] = $detection_key;
+              break;
+          }
+          
         }
         
         // Country checking for blocking and allowing specific countries by name or isocode.
         if ($decoded_json["block"] == "no" && isset($options['BLOCKED_COUNTRIES']) && !empty($options['BLOCKED_COUNTRIES'][0])) {
-            if (in_array($decoded_json[$address]["country"], $options['BLOCKED_COUNTRIES']) or in_array(
-                    $decoded_json[$address]["isocode"],
+            if (in_array($decoded_json[$address]["location"]["country_name"], $options['BLOCKED_COUNTRIES']) or in_array(
+                    $decoded_json[$address]["location"]["country_code"],
                     $options['BLOCKED_COUNTRIES']
                 )) {
                 $decoded_json["block"] = "yes";
                 $decoded_json["block_reason"] = "country";
             }
-        } else {
-            if ($decoded_json["block"] == "yes" && isset($options['ALLOWED_COUNTRIES']) && !empty($options['ALLOWED_COUNTRIES'][0])) {
-                if (in_array($decoded_json[$address]["country"], $options['ALLOWED_COUNTRIES']) or in_array(
-                        $decoded_json[$address]["isocode"],
-                        $options['ALLOWED_COUNTRIES']
-                    )) {
-                    $decoded_json["block"] = "no";
-                    $decoded_json["block_reason"] = "na";
-                }
+        } else if ($decoded_json["block"] == "yes" && isset($options['ALLOWED_COUNTRIES']) && !empty($options['ALLOWED_COUNTRIES'][0])) {
+            if (in_array($decoded_json[$address]["location"]["country_name"], $options['ALLOWED_COUNTRIES']) or in_array(
+                    $decoded_json[$address]["location"]["country_code"],
+                    $options['ALLOWED_COUNTRIES']
+                )) {
+                $decoded_json["block"] = "no";
+                $decoded_json["block_reason"] = "na";
             }
         }
 
@@ -182,7 +157,7 @@ class proxycheck
     public static function listing($options)
     {
         // Setup the correct querying string for the transport security selected.
-        if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] == true) {
+        if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] === true) {
             $url = "https://";
         } else {
             $url = "http://";
@@ -211,7 +186,7 @@ class proxycheck
     public static function rules($options)
     {
         // Setup the correct querying string for the transport security selected.
-        if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] == true) {
+        if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] === true) {
             $url = "https://";
         } else {
             $url = "http://";
@@ -242,7 +217,7 @@ class proxycheck
     public static function stats($options)
     {
         // Setup the correct querying string for the transport security selected.
-        if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] == true) {
+        if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] === true) {
             $url = "https://";
         } else {
             $url = "http://";
