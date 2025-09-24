@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.0.1 (September 24th 2025)
+------------------
+
+* Corrected an issue where block and block_reason variables would not be supplied under certain circumstances.
+
 1.0.0 (September 11th 2025)
 ------------------
 
