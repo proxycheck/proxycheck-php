@@ -22,6 +22,7 @@ $address = $_SERVER["REMOTE_ADDR"];
 // Input your options for this query including your optional API Key and query flags.
 $proxycheck_options = array(
   'API_KEY' => '######-######-######-######', // Your API Key.
+  'HMAC_KEY' => '', // Optional HMAC key from the Dashboard, requires TLS_SECURITY set to true.
   'ASN_DATA' => 1, // Enable ASN data response.
   'DAY_RESTRICTOR' => 7, // Restrict checking to proxies seen in the past # of days.
   'VPN_DETECTION' => 1, // Check for both VPN's and Proxies instead of just Proxies.
@@ -56,6 +57,7 @@ $address = $_SERVER["REMOTE_ADDR"];
 // Input your options for this query including your optional API Key and query flags.
 $proxycheck_options = array(
   'API_KEY' => '######-######-######-######', // Your API Key.
+  'HMAC_KEY' => '', // Optional HMAC key from the Dashboard, requires TLS_SECURITY set to true.
   'DAY_RESTRICTOR' => 7, // Restrict checking to proxies seen in the past # of days.
   'ANONYMOUS_DETECTION' => true, // Set to true to enable Anonymous detections
   'TLS_SECURITY' => false, // Enable or disable transport security (TLS).
@@ -84,6 +86,7 @@ $address = $_SERVER["REMOTE_ADDR"];
 // Input your options for this query including your optional API Key and query flags.
 $proxycheck_options = array(
   'API_KEY' => '######-######-######-######', // Your API Key.
+  'HMAC_KEY' => '', // Optional HMAC key from the Dashboard, requires TLS_SECURITY set to true.
   'DAY_RESTRICTOR' => 7, // Restrict checking to proxies seen in the past # of days.
   'ANONYMOUS_DETECTION' => true, // Set to true to enable Anonymous detections
   'PROXY_DETECTION' => true, // Set to true to enable Proxy detections
