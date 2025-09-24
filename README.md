@@ -46,6 +46,7 @@ $address = $_SERVER["REMOTE_ADDR"];
 // Input your options for this query including your optional API Key and query flags.
 $proxycheck_options = array(
   'API_KEY' => '######-######-######-######', // Your API Key.
+  'HMAC_KEY' => '', // Optional HMAC key from the Dashboard, requires TLS_SECURITY set to true.
   'ASN_DATA' => 1, // Enable ASN data response.
   'DAY_RESTRICTOR' => 7, // Restrict checking to proxies seen in the past # of days.
   'ANONYMOUS_DETECTION' => true, // Set to true to enable Anonymous detections (setting this to true can override other detection types)
@@ -66,6 +67,10 @@ $proxycheck_options = array(
 $result_array = \proxycheck\proxycheck::check($address, $proxycheck_options);
 ```
 In the above example we have included both countries and country isocodes in both the ```BLOCKED_COUNTRIES``` and ```ALLOWED_COUNTRIES``` field. That is because this library supports a local whitelist/blacklist feature but only for countries.
+
+In version v1.0.2 (Sep 24th 2025) we added the ability to provide your HMAC key from the customer Dashboard in the options array as shown above. When you provide this key the payload from the proxycheck.io API will be hashed using your provided HMAC key and the resultant hash compared with what the API provided in a HTTP header. If the two hashes match the payload has not been tampered with. This feature is only enabled if you have TLS_SECURITY set to true and have provided the 64 character HMAC key in the options array from your customer dashboard on our website.
+
+If the two hashes fail to match you will receive an error and the API result from proxycheck.io will be discarded and not handed to you in the result array, instead you'll receive a status error and message explaining the HMAC hashes did not match or the hash was missing in the API response from proxycheck.io.
 
 ## Viewing the query result ##
 
