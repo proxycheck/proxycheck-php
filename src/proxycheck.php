@@ -36,8 +36,14 @@ class proxycheck
         // Setup the correct querying string for the transport security selected.
         if (isset($options['TLS_SECURITY']) && $options['TLS_SECURITY'] === true) {
             $url = "https://";
+            if ( isset($options['HMAC_KEY']) && !empty($options['HMAC_KEY']) && strlen($options['HMAC_KEY']) == 64 ) {
+                $perform_hmac = true;
+            } else {
+                $perform_hmac = false;
+            }
         } else {
             $url = "http://";
+            $perform_hmac = false;
         }
         
         $url .= "proxycheck.io/v3/";
@@ -98,25 +104,50 @@ class proxycheck
             $decoded_json = self::makeRequest($url);
         }
         
+        // If we're using TLS and a HMAC key has been provided, hash the JSON payload and perform a signature validation
+        if ( isset($perform_hmac) && $perform_hmac === true ) {
+          
+          if ( isset($decoded_json["headers"]["http_x_signature"]) ) {
+            // Hash the payload using the HMAC key
+            $hmac_hash = hash_hmac('sha256', $decoded_json["raw"], $options['HMAC_KEY']);
+            if ( $hmac_hash !== $decoded_json["headers"]["http_x_signature"] ) {
+                if (isset($decoded_json)) { unset($decoded_json); }
+                $decoded_json["body"]["status"] = "error";
+                $decoded_json["body"]["message"] = "Invalid HMAC signature.";
+                $decoded_json["body"]["block"] = false;
+                $decoded_json["body"]["block_reason"] = "na";
+                return $decoded_json["body"];
+            }
+          } else {
+              if (isset($decoded_json)) { unset($decoded_json); }
+              $decoded_json["body"]["status"] = "error";
+              $decoded_json["body"]["message"] = "Missing http_x_signature (HMAC) in API response.";
+              $decoded_json["body"]["block"] = false;
+              $decoded_json["body"]["block_reason"] = "na";
+              return $decoded_json["body"];
+          }
+          
+        }
+        
         // If we're checking multiple addresses the block, block_reason and local country blocking doesn't apply.
         // Thus we'll return early before that code is run.
         if (is_array($address)) {
-            $decoded_json["block"] = "na";
-            $decoded_json["block_reason"] = "na";
-            return $decoded_json;
+            $decoded_json["body"]["block"] = false;
+            $decoded_json["body"]["block_reason"] = "na";
+            return $decoded_json["body"];
         }
             
         // Check if we're looking up an email address to see if it's disposable or not.
         // We return straight after as country and other checks are not applicable.
         if ( strpos($address, "@") !== false && isset($decoded_json[$address]["detections"]["disposable"]) ) {
           if ( $decoded_json[$address]["detections"]["disposable"] === true ) {
-              $decoded_json["block"] = true;
-              $decoded_json["block_reason"] = "disposable";
+              $decoded_json["body"]["block"] = true;
+              $decoded_json["body"]["block_reason"] = "disposable";
           } else {
-              $decoded_json["block"] = false;
-              $decoded_json["block_reason"] = "na";
+              $decoded_json["body"]["block"] = false;
+              $decoded_json["body"]["block_reason"] = "na";
           }
-          return $decoded_json;
+          return $decoded_json["body"];
         }
 
         // Output the clear block and block reasons for the address we're checking.
@@ -125,37 +156,37 @@ class proxycheck
           foreach ( $decoded_json[$address]["detections"] as $detection_key => $detection_value ) {
             
             if ( isset($options[strtoupper($detection_key) . "_DETECTION"]) && $options[strtoupper($detection_key) . "_DETECTION"] === true && $detection_value === true ) {
-                $decoded_json["block"] = true;
-                $decoded_json["block_reason"] = $detection_key;
+                $decoded_json["body"]["block"] = true;
+                $decoded_json["body"]["block_reason"] = $detection_key;
                 break;
             }
             
           }
         } else {
-            $decoded_json["block"] = false;
-            $decoded_json["block_reason"] = "na";
+            $decoded_json["body"]["block"] = false;
+            $decoded_json["body"]["block_reason"] = "na";
         }
         
         // Country checking for blocking and allowing specific countries by name or isocode.
-        if ($decoded_json["block"] === false && isset($options['BLOCKED_COUNTRIES']) && !empty($options['BLOCKED_COUNTRIES'][0])) {
+        if ($decoded_json["body"]["block"] === false && isset($options['BLOCKED_COUNTRIES']) && !empty($options['BLOCKED_COUNTRIES'][0])) {
             if (in_array($decoded_json[$address]["location"]["country_name"], $options['BLOCKED_COUNTRIES']) or in_array(
                     $decoded_json[$address]["location"]["country_code"],
                     $options['BLOCKED_COUNTRIES']
                 )) {
-                $decoded_json["block"] = true;
-                $decoded_json["block_reason"] = "country";
+                $decoded_json["body"]["block"] = true;
+                $decoded_json["body"]["block_reason"] = "country";
             }
-        } else if ($decoded_json["block"] === true && isset($options['ALLOWED_COUNTRIES']) && !empty($options['ALLOWED_COUNTRIES'][0])) {
+        } else if ($decoded_json["body"]["block"] === true && isset($options['ALLOWED_COUNTRIES']) && !empty($options['ALLOWED_COUNTRIES'][0])) {
             if (in_array($decoded_json[$address]["location"]["country_name"], $options['ALLOWED_COUNTRIES']) or in_array(
                     $decoded_json[$address]["location"]["country_code"],
                     $options['ALLOWED_COUNTRIES']
                 )) {
-                $decoded_json["block"] = false;
-                $decoded_json["block_reason"] = "na";
+                $decoded_json["body"]["block"] = false;
+                $decoded_json["body"]["block_reason"] = "na";
             }
         }
 
-        return $decoded_json;
+        return $decoded_json["body"];
     }
 
     public static function listing($options)
@@ -184,7 +215,7 @@ class proxycheck
         // Performing the API query to proxycheck.io/dashboard/ using cURL
         $decoded_json = self::makeRequest($url, $post_fields, 'POST');
 
-        return $decoded_json;
+        return $decoded_json["body"];
     }
 
     public static function rules($options)
@@ -215,7 +246,7 @@ class proxycheck
         // Performing the API query to proxycheck.io/dashboard/rules/ using cURL
         $decoded_json = self::makeRequest($url, $post_fields, 'POST');
 
-        return $decoded_json;
+        return $decoded_json["body"];
     }
 
     public static function stats($options)
@@ -252,7 +283,7 @@ class proxycheck
         // Performing the API query to proxycheck.io/dashboard/ using cURL
         $decoded_json = self::makeRequest($url);
 
-        return $decoded_json;
+        return $decoded_json["body"];
     }
 
     public static function makeRequest($url, $params = [], $method = 'GET')
@@ -261,20 +292,51 @@ class proxycheck
 
         $curl_options = array(
             CURLOPT_CONNECTTIMEOUT => 30,
-            CURLOPT_RETURNTRANSFER => true
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER => true
         );
 
-        if($method === 'POST') {
+        if ($method === 'POST') {
             $curl_options[CURLOPT_POST] = 1;
             $curl_options[CURLOPT_POSTFIELDS] = $params;
         }
 
         curl_setopt_array($ch, $curl_options);
-        $api_json_result = curl_exec($ch);
+
+        $response = curl_exec($ch);
+
+        if ($response === false) {
+            $error = curl_error($ch);
+            curl_close($ch);
+            return [
+                'headers' => [],
+                'body' => null,
+                'error' => $error
+            ];
+        }
+
+        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $raw_headers = substr($response, 0, $header_size);
+        $body = substr($response, $header_size);
+
         curl_close($ch);
 
-        return json_decode($api_json_result, true);
+        // Parse headers into array
+        $headers = [];
+        foreach (explode("\r\n", trim($raw_headers)) as $line) {
+            if (strpos($line, ':') !== false) {
+                list($key, $value) = explode(':', $line, 2);
+                $headers[trim($key)] = trim($value);
+            } elseif (!empty($line)) {
+                $headers['Status'] = $line;
+            }
+        }
 
+        return [
+            'headers' => $headers,
+            'raw' => $body,
+            'body' => json_decode($body, true)
+        ];
     }
 
 }
