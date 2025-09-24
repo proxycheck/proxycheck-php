@@ -110,26 +110,30 @@ class proxycheck
         // We return straight after as country and other checks are not applicable.
         if ( strpos($address, "@") !== false && isset($decoded_json[$address]["detections"]["disposable"]) ) {
           if ( $decoded_json[$address]["detections"]["disposable"] === true ) {
-            $decoded_json["block"] = true;
-            $decoded_json["block_reason"] = "disposable";
+              $decoded_json["block"] = true;
+              $decoded_json["block_reason"] = "disposable";
           } else {
-            $decoded_json["block"] = false;
-            $decoded_json["block_reason"] = "na";
+              $decoded_json["block"] = false;
+              $decoded_json["block_reason"] = "na";
           }
           return $decoded_json;
         }
 
         // Output the clear block and block reasons for the address we're checking.
-        
         // Read through the API's detections response and match the entries to the detection types supplied in the options array
-        foreach ( $decoded_json[$address]["detections"] as $detection_key => $detection_value ) {
-          
-          if ( isset($options[strtoupper($detection_key) . "_DETECTION"]) && $options[strtoupper($detection_key) . "_DETECTION"] === true && $detection_value === true ) {
-              $decoded_json["block"] = true;
-              $decoded_json["block_reason"] = $detection_key;
-              break;
+        if ( isset($decoded_json[$address]["detections"]) ) {
+          foreach ( $decoded_json[$address]["detections"] as $detection_key => $detection_value ) {
+            
+            if ( isset($options[strtoupper($detection_key) . "_DETECTION"]) && $options[strtoupper($detection_key) . "_DETECTION"] === true && $detection_value === true ) {
+                $decoded_json["block"] = true;
+                $decoded_json["block_reason"] = $detection_key;
+                break;
+            }
+            
           }
-          
+        } else {
+            $decoded_json["block"] = false;
+            $decoded_json["block_reason"] = "na";
         }
         
         // Country checking for blocking and allowing specific countries by name or isocode.
