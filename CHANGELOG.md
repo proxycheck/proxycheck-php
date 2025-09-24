@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.0.2 (September 24th 2025)
+------------------
+
+* Added support for HMAC (Hash-based Message Authentication Code) to the main address check function.
+
 1.0.1 (September 24th 2025)
 ------------------
 
