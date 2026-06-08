@@ -61,7 +61,9 @@ $proxycheck_options = array(
   'MASK_ADDRESS' => true, // Anonymises the local-part of an email address (e.g. anonymous@domain.tld)
   'CUSTOM_TAG' => '', // Specify a custom query tag instead of the default (Domain+Page).
   'BLOCKED_COUNTRIES' => array('Wakanda', 'WA'), // Specify an array of countries or isocodes to be blocked.
-  'ALLOWED_COUNTRIES' => array('Azeroth', 'AJ') // Specify an array of countries or isocodes to be allowed.
+  'ALLOWED_COUNTRIES' => array('Azeroth', 'AJ'), // Specify an array of countries or isocodes to be allowed.
+  'CONNECTION_TIMEOUT_MS' => 3000, // Custom connection timeout (CURLOPT_CONNECTTIMEOUT_MS)
+  'TRANSFER_TIMEOUT_MS' => 15000 // Custom transfer timeout (CURLOPT_TIMEOUT_MS)
 );
   
 $result_array = \proxycheck\proxycheck::check($address, $proxycheck_options);
@@ -71,6 +73,31 @@ In the above example we have included both countries and country isocodes in bot
 In version v1.0.2 (Sep 24th 2025) we added the ability to provide your HMAC key from the customer Dashboard in the options array as shown above. When you provide this key the payload from the proxycheck.io API will be hashed using your provided HMAC key and the resultant hash compared with what the API provided in a HTTP header. If the two hashes match the payload has not been tampered with. This feature is only enabled if you have TLS_SECURITY set to true and have provided the 64 character HMAC key in the options array from your customer dashboard on our website.
 
 If the two hashes fail to match you will receive an error and the API result from proxycheck.io will be discarded and not handed to you in the result array, instead you'll receive a status error and message explaining the HMAC hashes did not match or the hash was missing in the API response from proxycheck.io.
+
+## Custom CURL options ##
+
+Within the options array as of our v1.0.4 release (June 8th 2026) you can specify any CURL custom option that you want to use for all our functions within the library. That includes not just checking an IP or email address but accessing all the Dashboard API's too. Below is an example of how that's done.
+
+```
+$proxycheck_options = array(
+  'API_KEY' => '######-######-######-######', // Your API Key.
+  'CUSTOM_CURL_OPTIONS' => ["CURLOPT_CONNECTTIMEOUT_MS" => 3000, "CURLOPT_TIMEOUT_MS" => 15000], // Optional custom cURL options
+);
+```
+
+In the above we're showing the same ```$proxycheck_options``` array as above, but we removed all entries except this ```CUSTOM_CURL_OPTIONS``` array populated with two example options, the first of which sets the connection timeout and the second sets the transfer timeout, both in milliseconds.
+
+If you're only interested in supplying those two values (for limiting connection timeouts and transfer timeouts) and no other CURL option we have created two pre-defined keys specifically for these things which you can supply like below:
+
+```
+$proxycheck_options = array(
+  'API_KEY' => '######-######-######-######', // Your API Key.
+  'CONNECTION_TIMEOUT_MS' => 3000, // Custom connection timeout (CURLOPT_CONNECTTIMEOUT_MS)
+  'TRANSFER_TIMEOUT_MS' => 15000 // Custom transfer timeout (CURLOPT_TIMEOUT_MS)
+);
+```
+
+When utilising the ```CUSTOM_CURL_OPTIONS```, any options provided will be merged with the set options we have provided in the example above, you can still overwrite those however if you provide both ```CURLOPT_CONNECTTIMEOUT_MS``` or ```CURLOPT_TIMEOUT_MS``` within your own ```CUSTOM_CURL_OPTIONS``` array. 
 
 ## Viewing the query result ##
 
