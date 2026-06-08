@@ -96,12 +96,32 @@ class proxycheck
                 $post_fields[] = "tag=" . $options['CUSTOM_TAG'];
             }
         }
+        
+        $curl_options = array();
+
+        // Get the connection timeout in ms if supplied by options.
+        if (isset($options['CONNECTION_TIMEOUT_MS'])) {
+            $curl_options[CURLOPT_CONNECTTIMEOUT_MS] = $options['CONNECTION_TIMEOUT_MS'];
+        }
+
+        // Get the data transfer timeout in ms if supplied by options.
+        if (isset($options['TRANSFER_TIMEOUT_MS'])) {
+            $curl_options[CURLOPT_TIMEOUT_MS] = $options['TRANSFER_TIMEOUT_MS'];
+        }
+
+        // Allow fully custom cURL options if provided by options.
+        if (isset($options['CUSTOM_CURL_OPTIONS']) && is_array($options['CUSTOM_CURL_OPTIONS'])) {
+            foreach ($options['CUSTOM_CURL_OPTIONS'] as $key => $value) {
+                $resolved_key = is_string($key) ? constant($key) : $key;
+                $curl_options[$resolved_key] = $value;
+            }
+        }
 
         // Performing the API query to proxycheck.io/v2/ using cURL
         if ( isset($post_fields) && !empty($post_fields) ) {
-            $decoded_json = self::makeRequest($url, implode("&", $post_fields), 'POST');
+            $decoded_json = self::makeRequest($url, $curl_options, implode("&", $post_fields), 'POST');
         } else {
-            $decoded_json = self::makeRequest($url);
+            $decoded_json = self::makeRequest($url, $curl_options);
         }
         
         // If we're using TLS and a HMAC key has been provided, hash the JSON payload and perform a signature validation
@@ -212,8 +232,29 @@ class proxycheck
             $post_fields = "";
         }
 
+        
+        $curl_options = array();
+        
+        // Get the connection timeout in ms if supplied by options.
+        if (isset($options['CONNECTION_TIMEOUT_MS'])) {
+            $curl_options[CURLOPT_CONNECTTIMEOUT_MS] = $options['CONNECTION_TIMEOUT_MS'];
+        }
+
+        // Get the data transfer timeout in ms if supplied by options.
+        if (isset($options['TRANSFER_TIMEOUT_MS'])) {
+            $curl_options[CURLOPT_TIMEOUT_MS] = $options['TRANSFER_TIMEOUT_MS'];
+        }
+
+        // Allow fully custom cURL options if provided by options.
+        if (isset($options['CUSTOM_CURL_OPTIONS']) && is_array($options['CUSTOM_CURL_OPTIONS'])) {
+            foreach ($options['CUSTOM_CURL_OPTIONS'] as $key => $value) {
+                $resolved_key = is_string($key) ? constant($key) : $key;
+                $curl_options[$resolved_key] = $value;
+            }
+        }
+
         // Performing the API query to proxycheck.io/dashboard/ using cURL
-        $decoded_json = self::makeRequest($url, $post_fields, 'POST');
+        $decoded_json = self::makeRequest($url, $curl_options, $post_fields, 'POST');
 
         return $decoded_json["body"];
     }
@@ -243,8 +284,28 @@ class proxycheck
           $post_fields = '';
         }
         
+        $curl_options = array();
+        
+        // Get the connection timeout in ms if supplied by options.
+        if (isset($options['CONNECTION_TIMEOUT_MS'])) {
+            $curl_options[CURLOPT_CONNECTTIMEOUT_MS] = $options['CONNECTION_TIMEOUT_MS'];
+        }
+
+        // Get the data transfer timeout in ms if supplied by options.
+        if (isset($options['TRANSFER_TIMEOUT_MS'])) {
+            $curl_options[CURLOPT_TIMEOUT_MS] = $options['TRANSFER_TIMEOUT_MS'];
+        }
+
+        // Allow fully custom cURL options if provided by options.
+        if (isset($options['CUSTOM_CURL_OPTIONS']) && is_array($options['CUSTOM_CURL_OPTIONS'])) {
+            foreach ($options['CUSTOM_CURL_OPTIONS'] as $key => $value) {
+                $resolved_key = is_string($key) ? constant($key) : $key;
+                $curl_options[$resolved_key] = $value;
+            }
+        }
+        
         // Performing the API query to proxycheck.io/dashboard/rules/ using cURL
-        $decoded_json = self::makeRequest($url, $post_fields, 'POST');
+        $decoded_json = self::makeRequest($url, $curl_options, $post_fields, 'POST');
 
         return $decoded_json["body"];
     }
@@ -279,22 +340,52 @@ class proxycheck
             $url .= "&limit=" . $options['LIMIT'];
             $url .= "&offset=" . $options['OFFSET'];
         }
+      
+        $curl_options = array();
+        
+        // Get the connection timeout in ms if supplied by options.
+        if (isset($options['CONNECTION_TIMEOUT_MS'])) {
+            $curl_options[CURLOPT_CONNECTTIMEOUT_MS] = $options['CONNECTION_TIMEOUT_MS'];
+        }
+
+        // Get the data transfer timeout in ms if supplied by options.
+        if (isset($options['TRANSFER_TIMEOUT_MS'])) {
+            $curl_options[CURLOPT_TIMEOUT_MS] = $options['TRANSFER_TIMEOUT_MS'];
+        }
+
+        // Allow fully custom cURL options if provided by options.
+        if (isset($options['CUSTOM_CURL_OPTIONS']) && is_array($options['CUSTOM_CURL_OPTIONS'])) {
+            foreach ($options['CUSTOM_CURL_OPTIONS'] as $key => $value) {
+                $resolved_key = is_string($key) ? constant($key) : $key;
+                $curl_options[$resolved_key] = $value;
+            }
+        }
 
         // Performing the API query to proxycheck.io/dashboard/ using cURL
-        $decoded_json = self::makeRequest($url);
+        $decoded_json = self::makeRequest($url, $curl_options);
 
         return $decoded_json["body"];
     }
 
-    public static function makeRequest($url, $params = [], $method = 'GET')
+    public static function makeRequest($url, $curl_options_input, $params = [], $method = 'GET')
     {
         $ch = curl_init($url);
 
         $curl_options = array(
-            CURLOPT_CONNECTTIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT_MS => 3000,
+            CURLOPT_TIMEOUT_MS => 15000,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => true
         );
+        
+        if ( isset($curl_options_input) && $curl_options_input != null ) {
+            $resolved = array();
+            foreach ( $curl_options_input as $key => $value ) {
+                $resolved_key = is_string($key) ? constant($key) : $key;
+                $resolved[$resolved_key] = $value;
+            }
+            $curl_options = $resolved + $curl_options;
+        }
 
         if ($method === 'POST') {
             $curl_options[CURLOPT_POST] = 1;
