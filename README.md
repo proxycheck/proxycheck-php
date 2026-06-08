@@ -76,7 +76,7 @@ If the two hashes fail to match you will receive an error and the API result fro
 
 ## Custom CURL options ##
 
-Within the options array as of our v1.0.4 release (June 8th 2026) you can specify any CURL custom option that you want to use for all our functions within the library. That includes not just checking an IP or email address but accessing all the Dashboard API's too. Below is an example of how that's done.
+Within the options array as of our v1.0.3 release (June 8th 2026) you can specify any CURL custom option that you want to use for all our functions within the library. That includes not just checking an IP or email address but accessing all the Dashboard API's too. Below is an example of how that's done.
 
 ```
 $proxycheck_options = array(
