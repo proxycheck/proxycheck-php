@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.0.3 (June 8th 2026)
+------------------
+
+* Added support for custom CURL options to all functions and two custom timeout values
+
 1.0.2 (September 24th 2025)
 ------------------
 
