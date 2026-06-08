@@ -29,6 +29,9 @@ class proxycheck
     const OPTION_LIMIT = 'LIMIT';
     const OPTION_OFFSET = 'OFFSET';
     const OPTION_STAT_SELECTION = 'STAT_SELECTION';
+    const CONNECTION_TIMEOUT_MS = 'CUSTOM_CONNECTION_TIMEOUT';
+    const TRANSFER_TIMEOUT_MS = 'CUSTOM_TRANSFER_TIMEOUT';
+    const CUSTOM_CURL_OPTIONS = 'CUSTOM_CURL_OPTIONS';
 
 
     public static function check($address, $options)
