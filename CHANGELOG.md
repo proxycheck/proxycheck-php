@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.0.4 (June 21st 2026)
+------------------
+
+* Added a default user agent to the makeRequest function, allowing for library targeting by the API based on version to maximise compatibility.
+
 1.0.3 (June 8th 2026)
 ------------------
 
