@@ -378,7 +378,8 @@ class proxycheck
             CURLOPT_CONNECTTIMEOUT_MS => 3000,
             CURLOPT_TIMEOUT_MS => 15000,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HEADER => true
+            CURLOPT_HEADER => true,
+            CURLOPT_USERAGENT => 'proxycheck-php/1.0.4'
         );
         
         if ( isset($curl_options_input) && $curl_options_input != null ) {
