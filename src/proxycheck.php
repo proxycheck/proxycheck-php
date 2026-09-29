@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * proxycheck-php
+ *
+ * Version: 1.0.5
+ * Date:    2026-09-29
+ * GitHub:  https://github.com/proxycheck/proxycheck-php
+ */
+
 namespace proxycheck;
 
 class proxycheck
@@ -17,7 +25,8 @@ class proxycheck
     const OPTION_SCRAPER_DETECTION = 'SCRAPER_DETECTION';
     const OPTION_TOR_DETECTION = 'TOR_DETECTION';
     const OPTION_COMPROMISED_DETECTION = 'COMPROMISED_DETECTION';
-    const OPTION_HOST_DETECTION = 'HOST_DETECTION';
+    const OPTION_HOST_DETECTION = 'HOSTING_DETECTION';
+    const OPTION_HOSTING_DETECTION = 'HOSTING_DETECTION';
     const OPTION_DAY_RESTRICTOR = 'DAY_RESTRICTOR';
     const OPTION_QUERY_TAGGING = 'QUERY_TAGGING';
     const OPTION_CUSTOM_TAG = 'CUSTOM_TAG';
@@ -41,6 +50,13 @@ class proxycheck
             $url = "https://";
             if ( isset($options['HMAC_KEY']) && !empty($options['HMAC_KEY']) && strlen($options['HMAC_KEY']) == 64 ) {
                 $perform_hmac = true;
+            } else if ( isset($options['HMAC_KEY']) && !empty($options['HMAC_KEY']) && strlen($options['HMAC_KEY']) != 64 ) {
+                $decoded_json["body"]["status"] = "error";
+                $decoded_json["body"]["message"] = "Invalid HMAC key provided by your code to the proxycheck library.";
+                $decoded_json["body"]["block"] = false;
+                $decoded_json["body"]["block_reason"] = "na";
+                $perform_hmac = false;
+                return $decoded_json["body"];
             } else {
                 $perform_hmac = false;
             }
@@ -72,32 +88,29 @@ class proxycheck
 
         // Check if the address is an array of addresses to be checked.
         if (is_array($address)) {
-            $post_fields[] = "ips=" . implode(",", $address);
+            $post_fields[] = "ips=" . urlencode(implode(",", $address));
         } else {
-            $post_fields[] = "ips=" . $address;
+            $post_fields[] = "ips=" . urlencode($address);
         }
 
         // Build up the URL string with the selected flags.
-        if (isset($options['API_KEY'])) {
-            $url .= "?key=" . $options['API_KEY'];
-        } else {
-            $url .= "?key=";
-        }
-        
+        $url .= "?key=" . rawurlencode($options['API_KEY'] ?? '');
+
         if (isset($options['DAY_RESTRICTOR'])) {
-            $url .= "&days=" . $options['DAY_RESTRICTOR'];
+            $url .= "&days=" . rawurlencode($options['DAY_RESTRICTOR']);
         }
-        
+
         $url .= "&node=1";
 
         // By default the tag used is your querying domain and the webpage being accessed
         // However you can supply your own descriptive tag or disable tagging altogether.
-        if (isset($options['QUERY_TAGGING']) && $options['QUERY_TAGGING'] === true && empty($options['CUSTOM_TAG'])) {
-            $post_fields[] = "tag=" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
-        } else {
-            if (isset($options['QUERY_TAGGING']) && $options['QUERY_TAGGING'] === true && !empty($options['CUSTOM_TAG'])) {
-                $post_fields[] = "tag=" . $options['CUSTOM_TAG'];
+        if (isset($options['QUERY_TAGGING']) && $options['QUERY_TAGGING'] === true) {
+            if (!empty($options['CUSTOM_TAG'])) {
+                $tag = $options['CUSTOM_TAG'];
+            } else {
+                $tag = ($_SERVER['SERVER_NAME'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '');
             }
+            $post_fields[] = "tag=" . urlencode($tag);
         }
         
         $curl_options = array();
@@ -120,11 +133,21 @@ class proxycheck
             }
         }
 
-        // Performing the API query to proxycheck.io/v2/ using cURL
+        // Performing the API query to proxycheck.io/v3/ using cURL
         if ( isset($post_fields) && !empty($post_fields) ) {
             $decoded_json = self::makeRequest($url, $curl_options, implode("&", $post_fields), 'POST');
         } else {
             $decoded_json = self::makeRequest($url, $curl_options);
+        }
+
+        // Request failed (cURL error or non-JSON response).
+        if (!is_array($decoded_json["body"] ?? null)) {
+            return [
+                "status"       => "error",
+                "message"      => $decoded_json["error"] ?? "Invalid or empty API response.",
+                "block"        => false,
+                "block_reason" => "na",
+            ];
         }
         
         // If we're using TLS and a HMAC key has been provided, hash the JSON payload and perform a signature validation
@@ -133,7 +156,7 @@ class proxycheck
           if ( isset($decoded_json["headers"]["http_x_signature"]) ) {
             // Hash the payload using the HMAC key
             $hmac_hash = hash_hmac('sha256', $decoded_json["raw"], $options['HMAC_KEY']);
-            if ( $hmac_hash !== $decoded_json["headers"]["http_x_signature"] ) {
+            if ( !hash_equals($hmac_hash, $decoded_json["headers"]["http_x_signature"]) ) {
                 if (isset($decoded_json)) { unset($decoded_json); }
                 $decoded_json["body"]["status"] = "error";
                 $decoded_json["body"]["message"] = "Invalid HMAC signature.";
@@ -151,59 +174,50 @@ class proxycheck
           }
           
         }
-        
-        // If we're checking multiple addresses the block, block_reason and local country blocking doesn't apply.
-        // Thus we'll return early before that code is run.
+
+        // Defaults - always present in the returned array.
+        $decoded_json["body"]["block"] = false;
+        $decoded_json["body"]["block_reason"] = "na";
+
+        // Multiple addresses: per-address block logic doesn't apply.
         if (is_array($address)) {
-            $decoded_json["body"]["block"] = false;
-            $decoded_json["body"]["block_reason"] = "na";
             return $decoded_json["body"];
         }
-            
-        // Check if we're looking up an email address to see if it's disposable or not.
-        // We return straight after as country and other checks are not applicable.
-        if ( strpos($address, "@") !== false && isset($decoded_json[$address]["detections"]["disposable"]) ) {
-          if ( $decoded_json[$address]["detections"]["disposable"] === true ) {
-              $decoded_json["body"]["block"] = true;
-              $decoded_json["body"]["block_reason"] = "disposable";
-          } else {
-              $decoded_json["body"]["block"] = false;
-              $decoded_json["body"]["block_reason"] = "na";
-          }
-          return $decoded_json["body"];
+
+        $result = $decoded_json["body"][$address] ?? null;
+        if ($result === null) {
+            return $decoded_json["body"]; // address not in response
         }
 
-        // Output the clear block and block reasons for the address we're checking.
-        // Read through the API's detections response and match the entries to the detection types supplied in the options array
-        if ( isset($decoded_json[$address]["detections"]) ) {
-          foreach ( $decoded_json[$address]["detections"] as $detection_key => $detection_value ) {
-            
-            if ( isset($options[strtoupper($detection_key) . "_DETECTION"]) && $options[strtoupper($detection_key) . "_DETECTION"] === true && $detection_value === true ) {
+        // Email lookups: only the disposable check applies.
+        if (strpos($address, "@") !== false) {
+            if (($result["detections"]["disposable"] ?? false) === true) {
+                $decoded_json["body"]["block"] = true;
+                $decoded_json["body"]["block_reason"] = "disposable";
+            }
+            return $decoded_json["body"];
+        }
+
+        // Detection-based blocking.
+        foreach (($result["detections"] ?? []) as $detection_key => $detection_value) {
+            if ($detection_value === true && ($options[strtoupper($detection_key) . "_DETECTION"] ?? false) === true) {
                 $decoded_json["body"]["block"] = true;
                 $decoded_json["body"]["block_reason"] = $detection_key;
                 break;
             }
-            
-          }
-        } else {
-            $decoded_json["body"]["block"] = false;
-            $decoded_json["body"]["block_reason"] = "na";
         }
-        
-        // Country checking for blocking and allowing specific countries by name or isocode.
-        if ($decoded_json["body"]["block"] === false && isset($options['BLOCKED_COUNTRIES']) && !empty($options['BLOCKED_COUNTRIES'][0])) {
-            if (in_array($decoded_json[$address]["location"]["country_name"], $options['BLOCKED_COUNTRIES']) or in_array(
-                    $decoded_json[$address]["location"]["country_code"],
-                    $options['BLOCKED_COUNTRIES']
-                )) {
+
+        // Country blocking / allowing by name or ISO code.
+        $country_name = $result["location"]["country_name"] ?? null;
+        $country_code = $result["location"]["country_code"] ?? null;
+
+        if ($decoded_json["body"]["block"] === false && !empty($options['BLOCKED_COUNTRIES'][0])) {
+            if (in_array($country_name, $options['BLOCKED_COUNTRIES'], true) || in_array($country_code, $options['BLOCKED_COUNTRIES'], true)) {
                 $decoded_json["body"]["block"] = true;
                 $decoded_json["body"]["block_reason"] = "country";
             }
-        } else if ($decoded_json["body"]["block"] === true && isset($options['ALLOWED_COUNTRIES']) && !empty($options['ALLOWED_COUNTRIES'][0])) {
-            if (in_array($decoded_json[$address]["location"]["country_name"], $options['ALLOWED_COUNTRIES']) or in_array(
-                    $decoded_json[$address]["location"]["country_code"],
-                    $options['ALLOWED_COUNTRIES']
-                )) {
+        } elseif ($decoded_json["body"]["block"] === true && !empty($options['ALLOWED_COUNTRIES'][0])) {
+            if (in_array($country_name, $options['ALLOWED_COUNTRIES'], true) || in_array($country_code, $options['ALLOWED_COUNTRIES'], true)) {
                 $decoded_json["body"]["block"] = false;
                 $decoded_json["body"]["block_reason"] = "na";
             }
@@ -222,12 +236,12 @@ class proxycheck
         }
 
         // Build up the URL string for the selected list and action.
-        $url .= "proxycheck.io/dashboard/" . $options['LIST_SELECTION'] . "/" . $options['LIST_ACTION'] . "/";
-        $url .= "?key=" . $options['API_KEY'];
+        $url .= "proxycheck.io/dashboard/" . rawurlencode($options['LIST_SELECTION']) . "/" . rawurlencode($options['LIST_ACTION']) . "/";
+        $url .= "?key=" . rawurlencode($options['API_KEY']);
 
         if ($options['LIST_ACTION'] == "add" or $options['LIST_ACTION'] == "remove" or $options['LIST_ACTION'] == "set") {
             if (!empty($options['LIST_ENTRIES'])) {
-                $post_fields = "data=" . implode("\r\n", $options['LIST_ENTRIES']);
+                $post_fields = "data=" . urlencode(implode("\r\n", $options['LIST_ENTRIES']));
             } else {
                 $post_fields = "";
             }
@@ -259,6 +273,10 @@ class proxycheck
         // Performing the API query to proxycheck.io/dashboard/ using cURL
         $decoded_json = self::makeRequest($url, $curl_options, $post_fields, 'POST');
 
+        if (!is_array($decoded_json["body"] ?? null)) {
+            return ["status" => "error", "message" => $decoded_json["error"] ?? "Invalid or empty API response."];
+        }
+        
         return $decoded_json["body"];
     }
 
@@ -271,24 +289,26 @@ class proxycheck
             $url = "http://";
         }
 
-        // Build up the URL string for the selected rule and action.
-        $url .= "proxycheck.io/dashboard/rules/" . $options['RULE_ACTION'] . "/";
-        $url .= "?key=" . $options['API_KEY'];
+                // Build up the URL string for the selected rule and action.
+        $url .= "proxycheck.io/dashboard/rules/" . rawurlencode($options['RULE_ACTION']) . "/";
+        $url .= "?key=" . rawurlencode($options['API_KEY']);
+
+        $post_data = array();
 
         if (!empty($options['RULE_SELECTION'])) {
-            $post_fields = "name=" . $options['RULE_SELECTION'];
+            $post_data['name'] = $options['RULE_SELECTION'];
         }
-        
+
         if (!empty($options['RULE_ENTRIES'])) {
-            $post_fields .= "data=" . $options['RULE_ENTRIES'];
+            $post_data['data'] = is_array($options['RULE_ENTRIES'])
+                ? implode("\r\n", $options['RULE_ENTRIES'])
+                : $options['RULE_ENTRIES'];
         }
-        
-        if ( !isset($post_fields) OR empty($post_fields) ) {
-          $post_fields = '';
-        }
-        
+
+        $post_fields = http_build_query($post_data);
+
         $curl_options = array();
-        
+
         // Get the connection timeout in ms if supplied by options.
         if (isset($options['CONNECTION_TIMEOUT_MS'])) {
             $curl_options[CURLOPT_CONNECTTIMEOUT_MS] = $options['CONNECTION_TIMEOUT_MS'];
@@ -310,6 +330,10 @@ class proxycheck
         // Performing the API query to proxycheck.io/dashboard/rules/ using cURL
         $decoded_json = self::makeRequest($url, $curl_options, $post_fields, 'POST');
 
+        if (!is_array($decoded_json["body"] ?? null)) {
+            return ["status" => "error", "message" => $decoded_json["error"] ?? "Invalid or empty API response."];
+        }
+
         return $decoded_json["body"];
     }
 
@@ -323,8 +347,8 @@ class proxycheck
         }
 
         // Build up the URL string for the selected export stat.
-        $url .= "proxycheck.io/dashboard/export/" . $options['STAT_SELECTION'] . "/";
-        $url .= "?key=" . $options['API_KEY'];
+        $url .= "proxycheck.io/dashboard/export/" . rawurlencode($options['STAT_SELECTION']) . "/";
+        $url .= "?key=" . rawurlencode($options['API_KEY']);
 
         if (strcasecmp($options['STAT_SELECTION'], "detections") == 0 or strcasecmp(
                 $options['STAT_SELECTION'],
@@ -334,14 +358,19 @@ class proxycheck
         }
 
         if (strcasecmp($options['STAT_SELECTION'], "detections") == 0) {
-            if (empty($options['LIMIT'])) {
-                $options['LIMIT'] = 100;
+            // Cast to int so user-supplied values can't inject extra query parameters.
+            $limit  = (int) ($options['LIMIT'] ?? 0);
+            $offset = (int) ($options['OFFSET'] ?? 0);
+
+            if ($limit <= 0) {
+                $limit = 100;
             }
-            if (empty($options['OFFSET'])) {
-                $options['OFFSET'] = 0;
+            if ($offset < 0) {
+                $offset = 0;
             }
-            $url .= "&limit=" . $options['LIMIT'];
-            $url .= "&offset=" . $options['OFFSET'];
+
+            $url .= "&limit=" . $limit;
+            $url .= "&offset=" . $offset;
         }
       
         $curl_options = array();
@@ -367,6 +396,10 @@ class proxycheck
         // Performing the API query to proxycheck.io/dashboard/ using cURL
         $decoded_json = self::makeRequest($url, $curl_options);
 
+        if (!is_array($decoded_json["body"] ?? null)) {
+            return ["status" => "error", "message" => $decoded_json["error"] ?? "Invalid or empty API response."];
+        }
+
         return $decoded_json["body"];
     }
 
@@ -379,7 +412,7 @@ class proxycheck
             CURLOPT_TIMEOUT_MS => 15000,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => true,
-            CURLOPT_USERAGENT => 'proxycheck-php/1.0.4'
+            CURLOPT_USERAGENT => 'proxycheck-php/1.0.5'
         );
         
         if ( isset($curl_options_input) && $curl_options_input != null ) {
