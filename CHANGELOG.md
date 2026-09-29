@@ -1,6 +1,21 @@
 CHANGELOG
 =========
 
+1.0.5 (September 29th 2026)
+------------------
+
+* Fixed `Undefined array key` warnings in `check()` by reading results from the API response body instead of the wrapper array, which also fixes proxy, VPN and other detection blocks not firing.
+* Fixed `block` and `block_reason` not being initialised, so `BLOCKED_COUNTRIES` now applies to IPs with no matching detection.
+* Fixed warnings on missing address, detection, location and disposable-email fields by making those reads null-safe.
+* Fixed loose country matching by using strict `in_array()` comparison.
+* Fixed `rules()` building a broken POST body by using `http_build_query()`, and `RULE_ENTRIES` now accepts either a string or an array.
+* URL-encoded `ips`, `tag` and list `data` values in POST bodies, and encoded `API_KEY`, `DAY_RESTRICTOR` and URL path segments in all functions.
+* Cast `LIMIT` and `OFFSET` to integers in `stats()`, with safe defaults for invalid or negative values.
+* Switched the HMAC signature comparison to `hash_equals()`, and an HMAC key that isn't 64 characters now returns an error instead of silently disabling verification.
+* `check()` now returns the real cURL or JSON error before the HMAC step, and `listing()`, `rules()` and `stats()` return an error array on failure instead of `null`.
+* Tagging no longer warns under CLI or cron, because `SERVER_NAME` and `REQUEST_URI` fall back to empty strings.
+* Renamed the host detection option to `OPTION_HOSTING_DETECTION` to match the v3 response key, keeping `OPTION_HOST_DETECTION` as a backwards-compatible alias.
+
 1.0.4 (June 21st 2026)
 ------------------
 
